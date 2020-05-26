@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gpdi.hqplus.pay.mapper.WepayBillMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.gpdi.hqplus.pay.entity.WepayBill">
+        <id column="id" property="id" />
+        <result column="trans_date" property="transDate" />
+        <result column="common_id" property="commonId" />
+        <result column="business_no" property="businessNo" />
+        <result column="child_business_no" property="childBusinessNo" />
+        <result column="equipmeng_no" property="equipmengNo" />
+        <result column="wx_order_no" property="wxOrderNo" />
+        <result column="business_order_no" property="businessOrderNo" />
+        <result column="user_identity" property="userIdentity" />
+        <result column="trans_type" property="transType" />
+        <result column="trans_status" property="transStatus" />
+        <result column="payment_bank" property="paymentBank" />
+        <result column="currency" property="currency" />
+        <result column="total_amount" property="totalAmount" />
+        <result column="red_envelopes_amount" property="redEnvelopesAmount" />
+        <result column="wx_refund_no" property="wxRefundNo" />
+        <result column="business_refund_no" property="businessRefundNo" />
+        <result column="refund_amount" property="refundAmount" />
+        <result column="red_envelope_refund_amount" property="redEnvelopeRefundAmount" />
+        <result column="refund_type" property="refundType" />
+        <result column="refund_status" property="refundStatus" />
+        <result column="business_name" property="businessName" />
+        <result column="business_data" property="businessData" />
+        <result column="fee" property="fee" />
+        <result column="rate" property="rate" />
+        <result column="craete_time" property="craeteTime" />
+        <result column="remark" property="remark" />
+        <result column="status" property="status" />
+        <result column="version" property="version" />
+    </resultMap>
+
+</mapper>

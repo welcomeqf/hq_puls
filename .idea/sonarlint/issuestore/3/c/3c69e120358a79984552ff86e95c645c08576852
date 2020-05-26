@@ -1,0 +1,7 @@
+
+dsquid:UselessImportCheck"4Remove this unused import 'java.time.LocalDateTime'.(æÃ§ƒüÿÿÿÿ8—é×»Á-
+^squid:UselessImportCheck".Remove this unused import 'java.util.HashMap'.(™˜”€ùÿÿÿÿ8Ú™›ÆÁ-
+squid:S1488O"^Immediately return this expression instead of assigning it to the temporary variable "result".(ÑÉŠ»üÿÿÿÿ8¥İ²îÀ-
+vsquid:UselessImportCheck	"KRemove this unused import 'com.gpdi.hqplus.complaint.entity.TypeComplaint'.(°’ïø8­‚ÃñÀ-
+Zsquid:UselessImportCheck"*Remove this unused import 'java.util.Map'.(¼è½Òşÿÿÿÿ8Ú™›ÆÁ-
+squid:S1488l"\Immediately return this expression instead of assigning it to the temporary variable "page".(Ş®ı½úÿÿÿÿ8ŞÀ«¢À-

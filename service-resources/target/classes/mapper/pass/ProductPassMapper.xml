@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gpdi.hqplus.pass.mapper.ProductPassMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.gpdi.hqplus.pass.entity.ProductPass">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="username" property="username"/>
+        <result column="address" property="address"/>
+        <result column="remark" property="remark"/>
+        <result column="items" property="items"/>
+        <result column="status" property="status"/>
+        <result column="version" property="version"/>
+        <result column="create_time" property="createTime"/>
+        <result column="pass_date" property="passDate"/>
+        <result column="phone_number" property="phoneNumber"/>
+        <result column="code_src" property="codeSrc"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="audit_time" property="auditTime"/>
+        <result column="finish_time" property="finishTime"/>
+        <result column="project_code" property="projectCode"/>
+        <result column="extend_val" property="extendVal"/>
+        <result column="address_type" property="addressType"/>
+        <result column="task_id" property="taskId"/>
+        <result column="policemen_name" property="policemenName"/>
+        <result column="policemen_type" property="policemenType"/>
+    </resultMap>
+
+    <update id="changeStatus" parameterType="com.gpdi.hqplus.pass.entity.ProductPass">
+        update tb_product_pass
+        set status = 'status_lose'
+        where status not in ('status_policemen_success','status_cancel','status_fail')
+        and pass_date = DATE_SUB(curdate(),INTERVAL 1 DAY)
+   </update>
+
+</mapper>

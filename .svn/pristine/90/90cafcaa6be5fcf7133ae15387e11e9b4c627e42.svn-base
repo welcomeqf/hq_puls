@@ -1,0 +1,58 @@
+package com.gpdi.hqplus.apartment.service;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.gpdi.hqplus.apartment.entity.vo.RoomVO;
+import com.gpdi.hqplus.apartment.entity.params.RoomParams;
+import com.gpdi.hqplus.resources.entity.PropertyRoomType;
+
+import java.util.List;
+
+/**
+ * @Description 房型管理service
+ * @Author wzr
+ * @CreateDate 2019-07-04
+ * @Time 11:30
+ */
+public interface RoomService extends IService<PropertyRoomType> {
+
+    /*不允许app端对room进行操作*/
+
+    /**
+     * 分页查询房型
+     * @param page
+     * @return
+     */
+    Page listByPage(Page page);
+    /**
+     * 根据roomId查询
+     * @param roomId
+     * @return
+     */
+    RoomVO getRoomById(Long roomId);
+
+    /**
+     * 根据roomIds查询
+     * @param roomIds
+     * @return
+     */
+    List<RoomVO> listRoomByIds(List<Long> roomIds);
+
+    /**
+     * 新增房型
+     * @param roomParams
+     */
+    void addRoom(RoomParams roomParams);
+
+    /**
+     * 根据房型id删除房型
+     * @param roomIds
+     */
+    void deleteRoomByIds(List<Long> roomIds);
+
+    /**
+     * 编辑房型
+     * @param roomParams
+     */
+    void editRoom(RoomParams roomParams);
+}

@@ -1,0 +1,355 @@
+package com.gpdi.hqplus.property.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gpdi.hqplus.common.constants.ErrorCode;
+import com.gpdi.hqplus.common.entity.ProcessCallbackBO;
+import com.gpdi.hqplus.common.entity.UserContext;
+import com.gpdi.hqplus.common.entity.vo.JsonResultVO;
+import com.gpdi.hqplus.common.exception.ApplicationException;
+import com.gpdi.hqplus.common.manager.MQService;
+import com.gpdi.hqplus.common.util.*;
+import com.gpdi.hqplus.common.validate.StringValidate;
+import com.gpdi.hqplus.property.constants.PropertyMaintainConfig;
+import com.gpdi.hqplus.property.constants.PropertyMaintainEnum;
+import com.gpdi.hqplus.property.entity.query.PropertyMaintainApplyQuery;
+import com.gpdi.hqplus.property.entity.query.PropertyMaintainListQuery;
+import com.gpdi.hqplus.property.entity.vo.PropertyMainTainApplyVo;
+import com.gpdi.hqplus.property.entity.vo.PropertyMaintainListVO;
+import com.gpdi.hqplus.property.entity.vo.PropertyMaintainVO;
+import com.gpdi.hqplus.property.service.IPropertyService;
+import com.gpdi.hqplus.property.util.PropertyEnumUtil;
+import com.gpdi.hqplus.resources.entity.FileResource;
+import com.gpdi.hqplus.resources.entity.PropertyMaintenanceApply;
+import com.gpdi.hqplus.resources.feign.FileFeignClient;
+import com.gpdi.hqplus.resources.service.impl.PropertyMaintenanceApplyServiceImpl;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.User;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * 物业报修
+ *
+ * @author: lianghb
+ * @create: 2019-07-03 14:07
+ **/
+@Slf4j
+@Service
+@Transactional(rollbackFor = Exception.class)
+public class PropertyServiceImpl extends PropertyMaintenanceApplyServiceImpl implements IPropertyService {
+    @Autowired
+    private IdGenerator idGenerator;
+
+    @Autowired
+    private FileFeignClient fileFeignClient;
+
+
+    @Override
+    public void apply(PropertyMaintainApplyQuery query) {
+        // 设置属性
+        query.setId(idGenerator.getNumberId());
+        Long id = UserContext.get().getId();
+        query.setUserId(id);
+        log.info("id"+"==========物业报修======"+id);
+        query.setStatus(PropertyMaintainEnum.APPLY.getStatus());
+        query.setImages(JsonUtil.bean2JsonString(query.getFiles()));
+
+        // 插入数据
+        boolean insert = query.insert();
+        if (!insert) {
+            log.error("insert property maintenance apply fail.");
+            throw new ApplicationException(ErrorCode.SERVICE_ERROR, "提交申请失败，请稍后再试");
+        }
+
+    }
+
+    @Override
+    public List<PropertyMaintainVO> listByUser(Long userId) {
+        // 查询数据
+        List<PropertyMaintenanceApply> applyList = baseMapper.selectList(new QueryWrapper<PropertyMaintenanceApply>()
+                .lambda()
+                .eq(PropertyMaintenanceApply::getUserId, UserContext.get().getId())
+        );
+        if (CollectionUtil.isEmpty(applyList)) {
+            return null;
+        }
+
+        // 装配 vo
+        List<PropertyMaintainVO> result = CollectionUtil.createArrayList(applyList.size());
+        for (PropertyMaintenanceApply apply : applyList) {
+            result.add(BeanPowerHelper.mapCompleteOverrider(apply, PropertyMaintainVO.class));
+        }
+
+        return result;
+    }
+
+    @Override
+    public Page<PropertyMaintainVO> pageByUserForFinish(Page<PropertyMaintenanceApply> page) {
+        Long id = UserContext.get().getId();
+        log.info("id"+"===========物品报修已完成id=============="+id);
+        // 查询数据
+        baseMapper.selectPage(page, new QueryWrapper<PropertyMaintenanceApply>()
+                .lambda()
+                .eq(PropertyMaintenanceApply::getUserId, UserContext.get().getId())
+                .in(PropertyMaintenanceApply::getStatus,
+                        PropertyMaintainEnum.MAINTAIN.getStatus(),
+                        PropertyMaintainEnum.FAIL.getStatus())
+        );
+
+        return applyPage2VOPage(page);
+    }
+
+    @Override
+    public Page<PropertyMaintainVO> pageByUserForProcessing(Page<PropertyMaintenanceApply> page) {
+        Long id = UserContext.get().getId();
+        log.info("id"+"===========物品报修流程中id=============="+id);
+        // 查询数据
+        baseMapper.selectPage(page, new QueryWrapper<PropertyMaintenanceApply>()
+                .lambda()
+                .eq(PropertyMaintenanceApply::getUserId, UserContext.get().getId())
+                .notIn(PropertyMaintenanceApply::getStatus,
+                        PropertyMaintainEnum.MAINTAIN.getStatus(),
+                        PropertyMaintainEnum.FAIL.getStatus())
+        );
+
+        return applyPage2VOPage(page);
+    }
+
+    private Page<PropertyMaintainVO> applyPage2VOPage(Page<PropertyMaintenanceApply> page) {
+        List<PropertyMaintenanceApply> applyList = page.getRecords();
+        // 装配 vo
+        List<PropertyMaintainVO> result = CollectionUtil.createArrayList(applyList.size());
+        for (PropertyMaintenanceApply apply : applyList) {
+            PropertyMaintainVO vo = new PropertyMaintainVO();
+            BeanUtils.copyProperties(apply, vo);
+            vo.setImageFiles(JsonUtil.json2Bean(apply.getImages(), List.class));
+            result.add(vo);
+        }
+
+        return BeanPowerHelper.mapPage(page, result);
+    }
+
+    @Override
+    public PropertyMaintainVO getById(Long id) {
+        PropertyMaintenanceApply apply = baseMapper.selectById(id);
+        if (apply != null) {
+            return BeanPowerHelper.mapCompleteOverrider(apply, PropertyMaintainVO.class);
+        }
+        return null;
+    }
+
+    @Override
+    public void update(ProcessCallbackBO callbackBO) {
+        PropertyMaintenanceApply apply = baseMapper.selectById(callbackBO.getBusinessKey());
+        if (apply == null) {
+            return;
+        }
+
+        String processPointCode = callbackBO.getProcessPointCode();
+        if (StringUtil.isNotBlank(processPointCode)) {
+            PropertyMaintainEnum propertyMaintainEnum = PropertyEnumUtil.getByStatus(processPointCode);
+            if (propertyMaintainEnum == null) {
+                return;
+            }
+            apply.setStatus(propertyMaintainEnum.getStatus());
+        }
+
+        String taskId = callbackBO.getTaskId();
+        if (StringUtil.isNotBlank(taskId)) {
+            apply.setTaskId(taskId);
+        }
+
+        boolean update = apply.updateById();
+        if (!update) {
+            log.error("update PropertyMaintenanceApply fail");
+        }
+    }
+
+    @Override
+    public void feedback(PropertyMaintainApplyQuery query) {
+        PropertyMaintenanceApply apply = baseMapper.selectById(query.getId());
+        if (apply == null) {
+            throw new ApplicationException(ErrorCode.RESOURCES_NOT_FIND, "查询数据失败");
+        }
+
+        apply.setDealUserId(UserContext.get().getId());
+        apply.setFeedBack(query.getFeedBack());
+        apply.setAmount(query.getAmount());
+
+        boolean update = apply.updateById();
+        if (!update) {
+            log.error("update PropertyMaintenanceApply fail");
+            throw new ApplicationException(ErrorCode.SERVICE_ERROR, "更新数据失败");
+        }
+    }
+
+    @Override
+    public Page<PropertyMaintainListVO> pageAll(PropertyMaintainListQuery query) {
+        Page<PropertyMaintenanceApply> page = new Page<>();
+        page.setCurrent(query.getCurrent());
+        page.setSize(query.getSize());
+
+        LambdaQueryWrapper<PropertyMaintenanceApply> queryWrapper = new QueryWrapper<PropertyMaintenanceApply>().lambda()
+                .orderByDesc(PropertyMaintenanceApply::getId);
+
+        // 高级条件查询
+        if (StringUtil.isNotBlank(query.getAddress())) {
+            queryWrapper.like(PropertyMaintenanceApply::getAddress, query.getAddress());
+        }
+        if (StringUtil.isNotBlank(query.getType())) {
+            queryWrapper.eq(PropertyMaintenanceApply::getType, query.getType());
+        }
+        if (StringUtil.isNotBlank(query.getDealUserName())) {
+            queryWrapper.like(PropertyMaintenanceApply::getDealUserName, query.getDealUserName());
+        }
+        if (StringUtil.isNotBlank(query.getStatus())) {
+            queryWrapper.eq(PropertyMaintenanceApply::getStatus, query.getStatus());
+        }
+
+        if (query.getApplyStartTime() != null) {
+            queryWrapper.ge(PropertyMaintenanceApply::getCreateTime, query.getApplyStartTime());
+        }
+        if (query.getApplyEndTime() != null) {
+            queryWrapper.le(PropertyMaintenanceApply::getCreateTime, query.getApplyEndTime());
+        }
+
+        if (query.getCompleteStartTime() != null) {
+            queryWrapper.ge(PropertyMaintenanceApply::getCompleteTime, query.getCompleteStartTime());
+        }
+        if (query.getCompleteEndTime() != null) {
+            queryWrapper.le(PropertyMaintenanceApply::getCompleteTime, query.getCompleteEndTime());
+        }
+
+
+        baseMapper.selectPage(page, queryWrapper);
+
+        List<PropertyMaintenanceApply> records = page.getRecords();
+        List<PropertyMaintainListVO> result = CollectionUtil.createArrayList(records.size());
+        for (PropertyMaintenanceApply record : records) {
+            result.add(apply2ListVO(record));
+        }
+
+        return BeanPowerHelper.mapPage(page, result);
+    }
+
+    @Override
+    public PropertyMaintainListVO getListVOById(Long id) {
+        PropertyMaintenanceApply apply = baseMapper.selectById(id);
+        if (apply == null) {
+            throw new ApplicationException(ErrorCode.RESOURCES_NOT_FIND, "查询记录失败");
+        }
+        return apply2ListVO(apply);
+    }
+
+    @Override
+    public PropertyMaintenanceApply audit(String id) {
+        PropertyMaintenanceApply apply = baseMapper.selectById(id);
+        apply.setStatus(PropertyMaintainConfig.MAINTAIN_ASSIGN);
+        apply.setUpdateTime(LocalDateTime.now());
+        boolean b = apply.updateById();
+        if (!b) {
+            throw new RuntimeException("物业审核更新异常");
+        }
+        return apply;
+    }
+
+    @Override
+    public void auditFail(String id) {
+        PropertyMaintenanceApply apply = baseMapper.selectById(id);
+        if (apply == null) {
+            return;
+        }
+        apply.setStatus(PropertyMaintainConfig.PROPERTY_FAIL);
+        boolean update = apply.updateById();
+        if (!update) {
+            log.error("update Property fail");
+        }
+    }
+
+    @Override
+    public PropertyMaintenanceApply success(PropertyMainTainApplyVo vo) {
+        String id = vo.getId();
+        BigDecimal price = vo.getPrice();
+        StringValidate.requireNotBlank(id, "id不能为空");
+        if (price == null) {
+            throw new RuntimeException("金额不能为空");
+        }
+        PropertyMaintenanceApply apply = baseMapper.selectById(id);
+        if (apply == null) {
+            throw new RuntimeException("该条记录为空");
+        }
+        apply.setAmount(price);
+        apply.setStatus(PropertyMaintainConfig.MAINTAIN_MAINTAIN);
+        apply.setCompleteTime(LocalDateTime.now());
+        apply.setUpdateTime(LocalDateTime.now());
+        if (StringUtil.isNotEmpty(vo.getRemark())) {
+            apply.setFeedBack(vo.getRemark());
+        }
+        boolean updateById = apply.updateById();
+        if (!updateById) {
+            log.error("update Property fail");
+        }
+        return apply;
+    }
+
+    @Override
+    public void fail(String id) {
+        StringValidate.requireNotBlank(id, "id不能为空");
+        PropertyMaintenanceApply apply = baseMapper.selectById(id);
+        if (apply == null) {
+            throw new RuntimeException("该条记录为空");
+        }
+        apply.setStatus(PropertyMaintainConfig.PROPERTY_FAIL);
+        apply.setCompleteTime(LocalDateTime.now());
+        apply.setUpdateTime(LocalDateTime.now());
+        boolean updateById = apply.updateById();
+        if (!updateById) {
+            log.error("update Property fail");
+        }
+    }
+
+    private PropertyMaintainListVO apply2ListVO(PropertyMaintenanceApply apply) {
+        PropertyMaintainListVO vo = new PropertyMaintainListVO();
+        BeanUtils.copyProperties(apply, vo);
+        vo.setImageFiles(JsonUtil.json2Bean(apply.getImages(), List.class));
+        return vo;
+    }
+
+    private List<String> getImages(String id) {
+        JsonResultVO jsonResultVO = fileFeignClient.listByResourceId(id);
+        if (jsonResultVO == null) {
+            return null;
+        }
+        List<FileResource> fileResources = (List<FileResource>) jsonResultVO.getData();
+
+        List<String> images = CollectionUtil.createArrayList(fileResources.size());
+        for (FileResource fileResource : fileResources) {
+            images.add(fileResource.getFileName());
+        }
+
+        return images;
+    }
+
+    /**
+     * 维修完成
+     *
+     * @param apply
+     * @return
+     */
+    private PropertyMaintenanceApply maintain(PropertyMaintenanceApply apply) {
+        apply.setStatus(PropertyMaintainConfig.MAINTAIN_MAINTAIN);
+        apply.setCompleteTime(LocalDateTime.now());
+        apply.setUpdateTime(LocalDateTime.now());
+        apply.setDealUserId(UserContext.get().getId());
+        apply.setDealUserName(UserContext.get().getUserName());
+        return apply;
+    }
+}

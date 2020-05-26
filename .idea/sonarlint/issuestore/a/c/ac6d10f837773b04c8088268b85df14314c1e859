@@ -1,0 +1,6 @@
+
+8squid:S1170D"!Make this final field static too.(ü´ƒù
+psquid:S00116D"XRename this field "REGISTER_LOCK" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ü´ƒù
+]squid:UnusedPrivateMethod†"2Remove this unused private "user2UserInfo" method.(¢®°çÿÿÿÿÿ
+Zsquid:UnusedPrivateMethodv"5Remove this unused private "user2LoginInfoVO" method.(ÀÏŠŽ
+asquid:UselessImportCheck"6Remove this unused import 'javax.annotation.Resource'.(î¾Ì—8²ëÉÈÓ-

@@ -1,0 +1,7 @@
+
+usquid:S1149H"_Replace the synchronized class "StringBuffer" by an unsynchronized one such as "StringBuilder".(îİÓ
+Qsquid:S1118":Add a private constructor to hide the implicit public one.(®»–ü
+bsquid:S2259Ô"EA "NullPointerException" could be thrown; "md5Hex()" can return null.(‚­çùÿÿÿÿ
+wsquid:S1149˜"_Replace the synchronized class "StringBuffer" by an unsynchronized one such as "StringBuilder".(áóè
+6squid:S2119ª"Save and re-use this "Random".(¡Å”¦
+^squid:S2259·"FA "NullPointerException" could be thrown; "password" is nullable here.(„¯ù§

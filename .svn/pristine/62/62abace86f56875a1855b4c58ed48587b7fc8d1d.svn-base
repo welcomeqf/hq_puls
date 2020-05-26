@@ -1,0 +1,27 @@
+# remark:用户模块 author:lianghb date:2019-05-21
+server:
+  port: 9008
+
+spring:
+  profiles:
+    active: #spring.profiles.active#
+    #      active: test
+  application:
+    name: service-user
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/*.xml
+
+# remark:应用定位id，每个独立部署的应用都不同，用于生产全局唯一id;范围均为[0,31];各模块 workerId 如下 author:lianghb date:2019-05-24
+# eureka:1
+# gateway:2
+# authentication:3
+# file:4
+# process:5
+# message:6
+# system:7
+# user:8
+# resources:9
+app:
+  workerId: 8
+  dataCenterId: 1

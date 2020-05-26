@@ -1,0 +1,275 @@
+package com.gpdi.hqplus.apartment.service.impl;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gpdi.hqplus.apartment.entity.params.ApartmentParams;
+import com.gpdi.hqplus.apartment.entity.query.ApartmentQuery;
+import com.gpdi.hqplus.apartment.entity.vo.ApartmentVO;
+import com.gpdi.hqplus.apartment.entity.vo.RoomVO;
+import com.gpdi.hqplus.apartment.service.ApartmentService;
+import com.gpdi.hqplus.apartment.service.RoomService;
+import com.gpdi.hqplus.common.constants.BusinessCode;
+import com.gpdi.hqplus.common.constants.ErrorCode;
+import com.gpdi.hqplus.common.exception.ApplicationException;
+import com.gpdi.hqplus.common.util.*;
+import com.gpdi.hqplus.resources.constants.ResourceType;
+import com.gpdi.hqplus.resources.entity.PropertyEquipment;
+import com.gpdi.hqplus.resources.entity.PropertyResource;
+import com.gpdi.hqplus.resources.service.IPropertyEquipmentService;
+import com.gpdi.hqplus.resources.service.impl.PropertyResourceServiceImpl;
+import com.gpdi.hqplus.resources.util.CopyProperties;
+import com.gpdi.hqplus.resources.validate.CheckEmptyUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+/**
+ * @Description 公寓服务service
+ * @Author wzr
+ * @CreateDate 2019-07-04
+ * @Time 11:20
+ */
+@Slf4j
+@Service
+@Transactional(rollbackFor = Exception.class)
+public class ApartmentServiceImpl extends PropertyResourceServiceImpl implements ApartmentService {
+
+    @Autowired
+    IdGenerator idGenerator;
+
+    @Autowired
+    RoomService roomService;
+
+    @Autowired
+    IPropertyEquipmentService equipmentService;
+
+    /**
+     * 分页展示公寓
+     *
+     * @return
+     */
+    @Override
+    public Page<ApartmentVO> listApartmentByPage(Page page) {
+        baseMapper.selectPage(page, new QueryWrapper<PropertyResource>()
+                .lambda()
+                .eq(PropertyResource::getBusinessCode, BusinessCode.PROPERTY_APARTMENT)
+                .eq(PropertyResource::getType, ResourceType.APARTMENT_TYPE)
+                .eq(PropertyResource::getStatus,PropertyResource.STATUS_NORMAL)
+                .orderByDesc(PropertyResource::getCreateTime)
+        );
+        List records = page.getRecords();
+        if (CollectionUtil.isNotEmpty(records)){
+            List<ApartmentVO> recordsNew = CollectionUtil.createArrayList();
+            for (Object record:records){
+                ApartmentVO apartment = propertyResource2apartment((PropertyResource) record);
+                recordsNew.add(apartment);
+            }
+            page.setRecords(recordsNew);
+        }
+        return page;
+    }
+
+    /**
+     * 根据id查询公寓
+     *
+     * @param id
+     * @return
+     */
+    @Override
+    public ApartmentVO getApartmentById(Long id) {
+        PropertyResource propertyResource = baseMapper.selectById(id);
+        if (propertyResource==null){
+            log.error("公寓查询失败！查询id="+id);
+            throw new ApplicationException(ErrorCode.SERVICE_ERROR,"未查询到指定公寓");
+        }
+        ApartmentVO apartmentVO = propertyResource2apartment(propertyResource);
+        return apartmentVO;
+    }
+
+    /**
+     * 添加公寓，需要传入足够参数
+     *
+     * @param apartmentParams
+     */
+    @Override
+    public void addApartment(ApartmentParams apartmentParams) {
+        String[] params = {"name","pictures", "equipmentIds"};
+        CheckEmptyUtil.check(JsonUtil.bean2Map(apartmentParams),params);
+        ApartmentVO apartmentVO = BeanPowerHelper.mapCompleteOverrider(apartmentParams, ApartmentVO.class);
+        PropertyResource propertyResource = apartment2propertyResource(apartmentVO);
+        propertyResource.setEquipment(JsonUtil.bean2JsonString(apartmentParams.getEquipmentIds()));
+        propertyResource.setRoomTypeId(JsonUtil.bean2JsonString(apartmentParams.getRoomIds()));
+        propertyResource.setId(idGenerator.getNumberId());
+        propertyResource.setBusinessCode(BusinessCode.PROPERTY_APARTMENT);
+        propertyResource.setStatus(PropertyResource.STATUS_NORMAL);
+        propertyResource.setType(ResourceType.APARTMENT_TYPE);
+        int insert = baseMapper.insert(propertyResource);
+        if (insert!=1){
+            log.error("添加公寓失败");
+            throw new ApplicationException(ErrorCode.UNKNOWN_ERROR,"添加公寓失败，请重试");
+        }
+    }
+
+    /**
+     * 删除公寓，默认通过id删除
+     *
+     * @param apartmentParams
+     */
+    @Override
+    public void deleteApartment(ApartmentParams apartmentParams) {
+
+        List<Long> ids = apartmentParams.getIds();
+        if (CollectionUtil.isEmpty(ids)){
+            log.error("公寓删除失败，未找到id");
+            throw new ApplicationException(ErrorCode.PARAMETER_ERROR,"公寓删除失败，请检查参数");
+        }
+    }
+
+    /**
+     * 编辑公寓，需要足够参数
+     *
+     * @param apartmentParams
+     */
+    @Override
+    public void editApartment(ApartmentParams apartmentParams) {
+        String[] params = {"id","name","pictures","equipmentIds"};
+        CheckEmptyUtil.check(JsonUtil.bean2Map(apartmentParams),params);
+        //修改参数构成的apartmentVO
+        ApartmentVO apartmentParamsVO = BeanPowerHelper.mapCompleteOverrider(apartmentParams, ApartmentVO.class);
+        //根据id查询出原来的apartmentVO数据
+        ApartmentVO apartmentVO = getApartmentById(apartmentParamsVO.getId());
+        //部分复制参数，从params-->原始数据
+        CopyProperties.copyIgnoreNull(apartmentParamsVO,apartmentVO);
+        //处理后的数据转为propertyResource
+        PropertyResource propertyResource = apartment2propertyResource(apartmentVO);
+        //更新
+        baseMapper.updateById(propertyResource);
+    }
+
+    /**
+     * 动态条件分页查询公寓
+     * 此接口可显示disable状态的数据
+     * @param page
+     * @return
+     */
+    @Override
+    public Page searchApartmentByPage(Page<ApartmentQuery> page) {
+        LambdaQueryWrapper<PropertyResource> queryWrapper = new QueryWrapper<PropertyResource>()
+                .lambda()
+                .eq(PropertyResource::getType,ResourceType.APARTMENT_TYPE)
+                .orderByDesc(PropertyResource::getCreateTime);
+        if (CollectionUtil.isNotEmpty(page.getRecords())){
+            ApartmentQuery apartmentQuery = page.getRecords().get(0);
+            checkQueryParams(queryWrapper,apartmentQuery);
+        }
+        Page<PropertyResource> pageNew = new Page<>();
+        CopyProperties.copyAll(page,pageNew);
+        baseMapper.selectPage(pageNew,queryWrapper);
+        List<PropertyResource> records = pageNew.getRecords();
+        if (CollectionUtil.isEmpty(records)){
+            log.warn("公寓查询结果为空");
+            return pageNew;
+        }
+        List<ApartmentVO> recordsNew = CollectionUtil.createArrayList();
+        for (PropertyResource record:records){
+            ApartmentVO apartmentVO = propertyResource2apartment(record);
+            recordsNew.add(apartmentVO);
+        }
+        Page<ApartmentVO> finalPage = new Page<>();
+        CopyProperties.copyAll(pageNew,finalPage);
+        finalPage.setRecords(recordsNew);
+        return finalPage;
+    }
+
+    private LambdaQueryWrapper checkQueryParams(LambdaQueryWrapper<PropertyResource> queryWrapper,ApartmentQuery apartmentQuery){
+
+        if (StringUtil.isNotBlank(apartmentQuery.getName())){
+            queryWrapper.like(PropertyResource::getName,apartmentQuery.getName());
+        }
+
+        return queryWrapper;
+    }
+
+    public PropertyResource apartment2propertyResource(ApartmentVO apartment){
+        PropertyResource propertyResource = new PropertyResource();
+        BeanUtils.copyProperties(apartment,propertyResource);
+        //PropertyResource的extendVal存放额外内容
+        String desc = apartment.getDescription();
+        BigDecimal maxPrice = apartment.getMaxPrice();
+        BigDecimal minPrice = apartment.getMinPrice();
+        List<String> pictures = apartment.getPictures();
+        List<PropertyEquipment> equipments = apartment.getEquipments();
+        List<RoomVO> rooms = apartment.getRooms();
+
+        ApartmentParams extendParams = new ApartmentParams();
+        extendParams.setDescription(desc);
+        extendParams.setMaxPrice(maxPrice);
+        extendParams.setMinPrice(minPrice);
+        extendParams.setPictures(pictures);
+
+        //转为id集合存入equipment字段
+        if (CollectionUtil.isNotEmpty(equipments)){
+            List<Long> equipmentIds = CollectionUtil.createArrayList();
+            for (PropertyEquipment equipment:equipments) {
+                equipmentIds.add(equipment.getId());
+            }
+            propertyResource.setEquipment(JsonUtil.bean2JsonString(equipmentIds));
+        }
+        //转为id集合存入room_type_id字段
+        if (CollectionUtil.isNotEmpty(rooms)){
+            List<Long> roomIds = CollectionUtil.createArrayList();
+            for (RoomVO room:rooms) {
+                roomIds.add(room.getId());
+            }
+            propertyResource.setRoomTypeId(JsonUtil.bean2JsonString(roomIds));
+        }
+
+        propertyResource.setExtendVal(JsonUtil.bean2JsonString(extendParams));
+        //插入propertyResource特有字段
+        if (StringUtil.isEmpty(propertyResource.getBusinessCode())){
+            propertyResource.setBusinessCode(BusinessCode.PROPERTY_APARTMENT);
+        }
+        return propertyResource;
+    }
+
+    public ApartmentVO propertyResource2apartment(PropertyResource propertyResource){
+        ApartmentVO apartmentVO = BeanPowerHelper.mapCompleteOverrider(propertyResource, ApartmentVO.class);
+        String extendVal = propertyResource.getExtendVal();
+        if (StringUtil.isEmpty(extendVal)){
+            log.warn("读取公寓额外信息为空");
+        }else {
+            CopyProperties.copyIgnoreNull(JsonUtil.json2Bean(extendVal,ApartmentVO.class),apartmentVO);
+            //获取equipmentId列表，查询对应的equipment
+            List equipmentIds = JsonUtil.json2Bean(propertyResource.getEquipment(), List.class);
+            if (CollectionUtil.isNotEmpty(equipmentIds)) {
+                List<PropertyEquipment> equipments = CollectionUtil.createArrayList();
+                for (Object id : equipmentIds) {
+                    PropertyEquipment equipment = equipmentService.getById(Long.parseLong(id.toString()));
+                    equipments.add(equipment);
+                }
+                apartmentVO.setEquipments(equipments);
+            }
+            //获取roomTypeId列表，查询对应的room
+            List roomIds = JsonUtil.json2Bean(propertyResource.getRoomTypeId(), List.class);
+            if (CollectionUtil.isNotEmpty(roomIds)) {
+                List<RoomVO> rooms = CollectionUtil.createArrayList();
+                for (Object id : roomIds) {
+                    RoomVO room = roomService.getRoomById(Long.parseLong(id.toString()));
+                    rooms.add(room);
+                }
+                apartmentVO.setRooms(rooms);
+            }
+        }
+        //关闭json的循环调用
+        String s = JSON.toJSONStringWithDateFormat(apartmentVO, "yyyy-MM-dd HH:mm:ss", SerializerFeature.DisableCircularReferenceDetect);
+        return JsonUtil.json2Bean(s,ApartmentVO.class);
+    }
+}

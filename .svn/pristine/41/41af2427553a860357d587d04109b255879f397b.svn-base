@@ -1,0 +1,107 @@
+package com.gpdi.hqplus.apartment.entity.vo;
+
+import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.gpdi.hqplus.resources.entity.PropertyEquipment;
+import com.gpdi.hqplus.resources.entity.PropertyRoomType;
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+/**
+ * @Description 房型类
+ * 将房型放于tb_property_room_type内(这并不代表一定生成支付)
+ * 每条此记录视为一类房型，不代表单个房间也不代表预约记录
+ * @Author wzr
+ * @CreateDate 2019-07-04
+ * @Time 10:35
+ */
+@Data
+public class RoomVO extends Model<PropertyRoomType> {
+
+    /**
+     * id
+     */
+    private Long id;
+
+    /**
+     * 房型名称
+     */
+    private String name;
+
+    /**
+     * 代码，区别于其他资源
+     */
+    private String code;
+
+    /**
+     * 类型，区别于其他资源
+     */
+    private String type;
+
+    /**
+     * 房型介绍
+     */
+    private String description;
+
+    /**
+     * 房型最低价格
+     */
+    private BigDecimal minPrice;
+
+    /**
+     * 房型最高价格
+     */
+    private BigDecimal maxPrice;
+
+    /**
+     * 价格类型 /每月
+     */
+    private String priceType;
+
+    /**
+     * 房型图片集合
+     */
+    private List<String> pictures;
+
+    /**
+     * 房型面积大小
+     */
+    private Integer size;
+
+    /**
+     * 房型户型
+     */
+    private String model;
+
+    /**
+     * 房型户型图片
+     */
+    private String modelLinkUrl;
+
+    /**
+     * 房型朝向 东南西北
+     */
+    private String toward;
+
+    /**
+     * 房型状态 是否可租
+     */
+    private String rentStatus;
+
+    /**
+     * 房型窗户类型
+     */
+    private String window;
+
+    /**
+     * 租赁时间长度
+     */
+    private String rentTime;
+
+    /**
+     * 房型拥有设备
+     */
+    private List<PropertyEquipment> equipments;
+
+}

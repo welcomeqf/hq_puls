@@ -1,0 +1,136 @@
+package com.gpdi.hqplus.apartment.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gpdi.hqplus.apartment.entity.vo.ApartmentBookVO;
+import com.gpdi.hqplus.apartment.service.ApartmentBookService;
+import com.gpdi.hqplus.common.constants.BusinessCode;
+import com.gpdi.hqplus.common.constants.ErrorCode;
+import com.gpdi.hqplus.common.entity.UserContext;
+import com.gpdi.hqplus.common.entity.UserInfo;
+import com.gpdi.hqplus.common.exception.ApplicationException;
+import com.gpdi.hqplus.common.util.*;
+import com.gpdi.hqplus.resources.constants.ResourceType;
+import com.gpdi.hqplus.resources.entity.Book;
+import com.gpdi.hqplus.resources.service.impl.BookServiceImpl;
+import com.gpdi.hqplus.resources.util.CopyProperties;
+import com.gpdi.hqplus.resources.validate.CheckEmptyUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+/**
+ * @Description 公寓预约看房service
+ * @Author wzr
+ * @CreateDate 2019-07-04
+ * @Time 18:20
+ */
+@Slf4j
+@Service
+@Transactional(rollbackFor = Exception.class)
+public class ApartmentBookServiceImpl extends BookServiceImpl implements ApartmentBookService {
+
+    @Autowired
+    IdGenerator idGenerator;
+
+    /**
+     * 预约看房
+     *
+     * @param apartmentBookVO
+     */
+    @Override
+    public void bookApartment(ApartmentBookVO apartmentBookVO) {
+        String[] params = {"apartmentId","applyTime","name","phone"};
+        CheckEmptyUtil.check(JsonUtil.bean2Map(apartmentBookVO),params);
+        UserInfo userInfo = UserContext.get();
+        //设置参数
+        Book book = new Book();
+        CopyProperties.copyAll(apartmentBookVO,book);
+        book.setId(idGenerator.getNumberId());
+        book.setBusinessCode(BusinessCode.PROPERTY_APARTMENT);
+        book.setUserId(userInfo.getId());
+        book.setExtendVal(JsonUtil.bean2JsonString(apartmentBookVO));
+        book.setStatus(Book.STATUS_NORMAL);
+        book.setResourceId(apartmentBookVO.getApartmentId());
+        book.setType(ResourceType.APARTMENT_TYPE);
+
+        int insert = baseMapper.insert(book);
+        if (insert !=1){
+            log.error("公寓预约失败，公寓id="+apartmentBookVO.getApartmentId());
+            throw new ApplicationException(ErrorCode.SERVICE_ERROR,"公寓预约看房失败，请重试");
+        }
+    }
+
+    /**
+     * 分页查询指定公寓的预约看房记录
+     * 该接口可查看disable记录
+     * @param page
+     * @return
+     */
+    @Override
+    public Page listApartmentBookByApartmentIdAndPage(Page<ApartmentBookVO> page) {
+        //获取公寓id，前端传入
+        List<ApartmentBookVO> records = page.getRecords();
+        if (CollectionUtil.isEmpty(records)||records.get(0).getApartmentId()==null){
+            log.error("查询公寓预约看房记录失败，未传入公寓id");
+            throw new ApplicationException(ErrorCode.PARAMETER_ERROR,"未传入公寓id");
+        }
+        Page<Book> bookPage = new Page<>();
+        //复制页数、当前页等通用查询参数
+        CopyProperties.copyAll(page,bookPage);
+        baseMapper.selectPage(bookPage, new QueryWrapper<Book>()
+                .lambda()
+                .eq(Book::getBusinessCode, BusinessCode.PROPERTY_APARTMENT)
+                .eq(Book::getType, ResourceType.APARTMENT_TYPE)
+                .eq(Book::getResourceId,records.get(0).getApartmentId())
+                .orderByDesc(Book::getCreateTime)
+        );
+        List<Book> bookRecords = bookPage.getRecords();
+        if (CollectionUtil.isNotEmpty(bookRecords)){
+            List<ApartmentBookVO> recordsNew = CollectionUtil.createArrayList();
+            for (Book bookRecord : bookRecords){
+                ApartmentBookVO apartmentBook = book2apartmentBookVO(bookRecord);
+                recordsNew.add(apartmentBook);
+            }
+            page.setRecords(recordsNew);
+        }
+        return page;
+    }
+
+    public Book apartmentBook2book(ApartmentBookVO apartmentBookVO){
+        String gender = apartmentBookVO.getGender();
+        String name = apartmentBookVO.getName();
+        String phone = apartmentBookVO.getPhone();
+        Long roomId = apartmentBookVO.getRoomId();
+
+        ApartmentBookVO extendParams = new ApartmentBookVO();
+        extendParams.setGender(gender);
+        extendParams.setName(name);
+        extendParams.setPhone(phone);
+        extendParams.setRoomId(roomId);
+
+        Book book = new Book();
+        BeanUtils.copyProperties(apartmentBookVO,book);
+        book.setResourceId(apartmentBookVO.getApartmentId());
+        book.setType(ResourceType.APARTMENT_TYPE);
+        book.setBusinessCode(BusinessCode.PROPERTY_APARTMENT);
+        book.setExtendVal(JsonUtil.bean2JsonString(extendParams));
+        return book;
+    }
+
+    public ApartmentBookVO book2apartmentBookVO(Book book){
+        ApartmentBookVO apartmentBookVO = BeanPowerHelper.mapCompleteOverrider(book, ApartmentBookVO.class);
+        String extendVal = book.getExtendVal();
+        if (StringUtil.isEmpty(extendVal)){
+            log.error("book的extendVal为空，id="+book.getId());
+            throw new ApplicationException(ErrorCode.UNKNOWN_ERROR,"获取数据失败");
+        }
+        CopyProperties.copyIgnoreNull(JsonUtil.json2Bean(book.getExtendVal(), ApartmentBookVO.class),apartmentBookVO);
+        apartmentBookVO.setApartmentId(book.getResourceId());
+        return apartmentBookVO;
+    }
+}

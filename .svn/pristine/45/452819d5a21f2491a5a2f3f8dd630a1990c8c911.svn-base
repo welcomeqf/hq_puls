@@ -1,0 +1,87 @@
+package com.gpdi.hqplus.apartment.controller.app;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gpdi.hqplus.apartment.entity.params.ApartmentParams;
+import com.gpdi.hqplus.apartment.entity.vo.ApartmentBookVO;
+import com.gpdi.hqplus.apartment.entity.vo.ApartmentVO;
+import com.gpdi.hqplus.apartment.service.ApartmentBookService;
+import com.gpdi.hqplus.apartment.service.ApartmentService;
+import com.gpdi.hqplus.common.constants.ErrorCode;
+import com.gpdi.hqplus.common.exception.ApplicationException;
+import com.gpdi.hqplus.resources.util.CopyProperties;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+/**
+ * @Description 公寓app端服务
+ * @Author wzr
+ * @CreateDate 2019-07-05
+ * @Time 17:49
+ */
+@Api(tags = "公寓相关服务")
+@Slf4j
+@RestController
+@RequestMapping("/v1/app/resources/apartment")
+public class ApartmentAppController {
+
+    @Autowired
+    ApartmentService apartmentService;
+    @Autowired
+    ApartmentBookService apartmentBookService;
+
+    @ApiOperation(value = "查询单条公寓记录，包含了设备和房型")
+    @ApiImplicitParam(name = "apartmentId", value = "公寓id", required = true,dataType = "long",paramType = "query")
+    @PostMapping("/getById")
+    public ApartmentVO getById(@RequestBody ApartmentParams apartmentParams){
+        Long id = apartmentParams.getApartmentId();
+        if (id!=null){
+           return  apartmentService.getApartmentById(id);
+        }else {
+            log.error("参数不足，需要公寓id");
+            throw new ApplicationException(ErrorCode.PARAMETER_ERROR,"需要公寓id");
+        }
+    }
+
+    @ApiOperation(value = "分页查询公寓列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "size", value = "每页显示数", required = true, dataType = "long", paramType = "path"),
+            @ApiImplicitParam(name = "current", value = "当前页", required = true, dataType = "long", paramType = "path")
+    })
+    @PostMapping("/listByPage")
+    public Page listByPage(@RequestBody Page page){
+        return apartmentService.listApartmentByPage(page);
+    }
+
+    @ApiOperation(value = "公寓预约看房")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "apartmentId",value = "公寓id",required = true,dataType = "long",paramType = "path"),
+            @ApiImplicitParam(name = "name",value = "申请人姓名",required = true,dataType = "String",paramType = "path"),
+            @ApiImplicitParam(name = "applyTime",value = "预约日期",required = true,dataType = "LocalDateTime",paramType = "path"),
+            @ApiImplicitParam(name = "phone",value = "申请手机号",required = true,dataType = "String",paramType = "path"),
+            @ApiImplicitParam(name = "gender",value = "申请人性别",dataType = "String",paramType = "path"),
+            @ApiImplicitParam(name = "roomId",value = "意向房型id",dataType = "long",paramType = "path"),
+            @ApiImplicitParam(name = "message",value = "用户消息",dataType = "String",paramType = "path")
+    })
+    @PostMapping("/book")
+    public void bookApartment(@RequestBody ApartmentParams apartmentParams){
+        ApartmentBookVO apartmentBookVO = new ApartmentBookVO();
+        CopyProperties.copyAll(apartmentParams,apartmentBookVO);
+        //无法接收解析localDateTime，接收String再解析
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        //无法直接解析为localDateTime，先转为localDate
+        LocalDate localDate = LocalDate.parse(apartmentParams.getApplyTime(), formatter);
+        //localDate-->localDateTime
+        LocalDateTime applyTime = localDate.atStartOfDay();
+        apartmentBookVO.setApplyTime(applyTime);
+        apartmentBookService.bookApartment(apartmentBookVO);
+    }
+}

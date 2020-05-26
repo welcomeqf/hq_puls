@@ -1,0 +1,211 @@
+package com.gpdi.hqplus.apartment.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gpdi.hqplus.apartment.entity.params.RoomParams;
+import com.gpdi.hqplus.apartment.entity.vo.RoomVO;
+import com.gpdi.hqplus.apartment.service.ApartmentService;
+import com.gpdi.hqplus.apartment.service.RoomService;
+import com.gpdi.hqplus.common.constants.BusinessCode;
+import com.gpdi.hqplus.common.util.*;
+import com.gpdi.hqplus.resources.constants.ResourceType;
+import com.gpdi.hqplus.resources.entity.PropertyEquipment;
+import com.gpdi.hqplus.resources.entity.PropertyRoomType;
+import com.gpdi.hqplus.resources.service.IPropertyEquipmentService;
+import com.gpdi.hqplus.resources.service.impl.PropertyRoomTypeServiceImpl;
+import com.gpdi.hqplus.resources.util.CopyProperties;
+import com.gpdi.hqplus.resources.validate.CheckEmptyUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * @Description 房型管理Service
+ * @Author wzr
+ * @CreateDate 2019-07-04
+ * @Time 11:33
+ */
+@Slf4j
+@Service
+@Transactional(rollbackFor = Exception.class)
+public class RoomServiceImpl extends PropertyRoomTypeServiceImpl implements RoomService {
+
+    @Autowired
+    IdGenerator idGenerator;
+
+    @Autowired
+    ApartmentService apartmentService;
+
+    @Autowired
+    IPropertyEquipmentService equipmentService;
+
+    /**
+     * 分页查询房型
+     * @param page
+     * @return
+     */
+    @Override
+    public Page listByPage(Page page) {
+        baseMapper.selectPage(page,new QueryWrapper<PropertyRoomType>()
+                .lambda()
+                .eq(PropertyRoomType::getBusinessCode,BusinessCode.PROPERTY_APARTMENT)
+                .eq(PropertyRoomType::getType,ResourceType.APARTMENT_TYPE)
+                .orderByDesc(PropertyRoomType::getCreateTime)
+        );
+        List records = page.getRecords();
+        if (CollectionUtil.isNotEmpty(records)){
+            List<RoomVO> recordsNew = CollectionUtil.createArrayList();
+            for (Object record : records){
+                PropertyRoomType propertyRoomType = BeanPowerHelper.mapCompleteOverrider(record, PropertyRoomType.class);
+                RoomVO room = propertyRoomType2room(propertyRoomType);
+                recordsNew.add(room);
+            }
+            page.setRecords(recordsNew);
+        }
+        return page;
+    }
+
+    /**
+     * 根据roomId查询
+     *
+     * @param roomId
+     * @return
+     */
+    @Override
+    public RoomVO getRoomById(Long roomId) {
+        PropertyRoomType propertyRoomType = baseMapper.selectById(roomId);
+        return propertyRoomType2room(propertyRoomType);
+    }
+
+    /**
+     * 新增房型
+     *
+     * @param roomParams
+     */
+    @Override
+    public void addRoom(RoomParams roomParams) {
+        String[] params = {"name",
+                "minPrice",
+                "maxPrice",
+                "priceType",
+                "pictures",
+                "equipmentIds"};
+        CheckEmptyUtil.check(JsonUtil.bean2Map(roomParams),params);
+
+        RoomVO room = BeanPowerHelper.mapCompleteOverrider(roomParams, RoomVO.class);
+
+        PropertyRoomType propertyRoomType = room2propertyRoomType(room);
+        propertyRoomType.setId(idGenerator.getNumberId());
+        propertyRoomType.setBusinessCode(BusinessCode.PROPERTY_APARTMENT);
+        propertyRoomType.setType(ResourceType.APARTMENT_TYPE);
+
+        String extendVal = propertyRoomType.getExtendVal();
+        RoomParams extendParams = JsonUtil.json2Bean(extendVal, RoomParams.class);
+        extendParams.setEquipmentIds(roomParams.getEquipmentIds());
+        propertyRoomType.setExtendVal(JsonUtil.bean2JsonString(extendParams));
+        baseMapper.insert(propertyRoomType);
+    }
+
+    /**
+     * 根据房型id删除房型
+     *
+     * @param roomId
+     */
+    @Override
+    public void deleteRoomById(Long roomId) {
+        baseMapper.deleteById(roomId);
+    }
+
+    /**
+     * 编辑房型
+     *
+     * @param roomParams
+     */
+    @Override
+    public void editRoom(RoomParams roomParams) {
+        RoomVO room = BeanPowerHelper.mapCompleteOverrider(roomParams, RoomVO.class);
+        PropertyRoomType propertyRoomType = room2propertyRoomType(room);
+        Map map = JsonUtil.json2Map(propertyRoomType.getExtendVal());
+        map.put("equipmentIds",JsonUtil.bean2JsonString(roomParams.getEquipmentIds()));
+        propertyRoomType.setExtendVal(JsonUtil.bean2JsonString(map));
+        baseMapper.updateById(propertyRoomType);
+    }
+
+    public PropertyRoomType room2propertyRoomType(RoomVO room){
+        PropertyRoomType propertyRoomType = BeanPowerHelper.mapCompleteOverrider(room, PropertyRoomType.class);
+
+        //获取扩展字段
+        BigDecimal minPrice = room.getMinPrice();
+        BigDecimal maxPrice = room.getMaxPrice();
+        String priceType = room.getPriceType();
+        List<String> pictures = room.getPictures();
+        Integer size = room.getSize();
+        String model = room.getModel();
+        String modelLinkUrl = room.getModelLinkUrl();
+        String rentTime = room.getRentTime();
+        String rentStatus = room.getRentStatus();
+        String window = room.getWindow();
+        List<PropertyEquipment> equipments = room.getEquipments();
+
+        //用params填充参数
+        RoomParams roomParams = new RoomParams();
+        roomParams.setMinPrice(minPrice);
+        roomParams.setMaxPrice(maxPrice);
+        roomParams.setPriceType(priceType);
+        roomParams.setSize(size);
+        roomParams.setModel(model);
+        roomParams.setModelLinkUrl(modelLinkUrl);
+        roomParams.setRentTime(rentTime);
+        roomParams.setRentStatus(rentStatus);
+        roomParams.setWindow(window);
+
+        //设备只存id
+        if (CollectionUtil.isNotEmpty(equipments)){
+            List<Long> equipmentIds = CollectionUtil.createArrayList();
+            for(PropertyEquipment equipment : equipments){
+                Long id = equipment.getId();
+                equipmentIds.add(id);
+            }
+            roomParams.setEquipmentIds(equipmentIds);
+        }
+        propertyRoomType.setImgSrc(JsonUtil.bean2JsonString(pictures));
+        //转换后需要插入propertyRoomType特有的字段
+        if (StringUtil.isEmpty(propertyRoomType.getBusinessCode())) {
+            propertyRoomType.setBusinessCode(BusinessCode.PROPERTY_APARTMENT);
+        }
+        //放入额外字段
+        propertyRoomType.setExtendVal(JsonUtil.bean2JsonString(roomParams));
+
+        return propertyRoomType;
+    }
+
+    public RoomVO propertyRoomType2room(PropertyRoomType propertyRoomType){
+
+        RoomVO room = BeanPowerHelper.mapCompleteOverrider(propertyRoomType, RoomVO.class);
+        String extendVal = propertyRoomType.getExtendVal();
+
+        if (StringUtil.isNotEmpty(extendVal)){
+            RoomParams roomParams = JsonUtil.json2Bean(extendVal, RoomParams.class);
+            List<Long> equipmentIds = roomParams.getEquipmentIds();
+            if (CollectionUtil.isNotEmpty(equipmentIds)){
+                List<PropertyEquipment> equipments = CollectionUtil.createArrayList();
+                PropertyEquipment equipment;
+                for (Long id : equipmentIds){
+                    equipment = equipmentService.getById(id);
+                    equipments.add(equipment);
+                }
+                room.setEquipments(equipments);
+                CopyProperties.copyIgnoreNull(roomParams,room);
+            }
+            String imgSrc = propertyRoomType.getImgSrc();
+            List<String> pictures = JsonUtil.json2Bean(imgSrc,List.class);
+            room.setPictures(pictures);
+        }
+        return room;
+    }
+}

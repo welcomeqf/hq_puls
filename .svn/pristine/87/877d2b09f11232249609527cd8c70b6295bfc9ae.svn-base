@@ -1,0 +1,124 @@
+package com.gpdi.hqplus.officebuild.entity;
+
+import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.gpdi.hqplus.resources.entity.PropertyEquipment;
+import com.gpdi.hqplus.resources.entity.PropertyRoomType;
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+/**
+ * @Description 写字楼系列vo
+ * @Author wzr
+ * @CreateDate 2019-07-08
+ * @Time 15:51
+ */
+@Data
+public class OfficeVO extends Model<PropertyRoomType> {
+
+    /**
+     * 写字楼系列id
+     */
+    private Long id;
+
+    /**
+     * 类型
+     */
+    private String type;
+
+    /**
+     * 标题
+     */
+    private String name;
+
+    /**
+     * 地址
+     */
+    private String address;
+
+    /**
+     * 写字楼系列图片列表 第一张就作为封面
+     */
+    private List<String> pictures;
+
+    /**
+     * 楼层 因为可能有多层，所以改为String
+     */
+    private String floor;
+
+    /**
+     * 单元
+     */
+    private String unitCode;
+
+    /**
+     * 面积 这里指的是每层的面积
+     */
+    private String size;
+
+    /**
+     * 设备信息 实际将ids存入equipment字段
+     */
+    private List<PropertyEquipment> equipments;
+
+    /**
+     * 单价 按面积或楼层购买
+     */
+    private BigDecimal unitPrice;
+
+    /**
+     * 单价价格单位
+     */
+    private String unitPriceType;
+
+    /**
+     * 总价
+     */
+    private BigDecimal totalPrice;
+
+    /**
+     * 总价价格单位
+     */
+    private String totalPriceType;
+
+    /**
+     * 工位数
+     */
+    private String workerNum;
+
+    /**
+     * 售卖状态
+     */
+    private String saleStatus;
+
+    /**
+     * 装修状态
+     */
+    private String decorationStatus;
+
+    /**
+     * 产权年限
+     */
+    private Integer propertyYears;
+
+    /**
+     * 户型图片
+     */
+    private String modelUrl;
+
+    /**
+     * 详情
+     */
+    private String description;
+
+    /**
+     * 周边
+     */
+    private String surrounding;
+
+    /**
+     * 动态
+     */
+    private List<String> dynamics;
+}

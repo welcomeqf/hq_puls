@@ -1,0 +1,204 @@
+package com.gpdi.hqplus.meeting.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gpdi.hqplus.common.constants.BusinessCode;
+import com.gpdi.hqplus.common.constants.ErrorCode;
+import com.gpdi.hqplus.common.exception.ApplicationException;
+import com.gpdi.hqplus.common.util.*;
+import com.gpdi.hqplus.meeting.constants.MeetingRoomConstants;
+import com.gpdi.hqplus.meeting.entity.query.MeetingProductQuery;
+import com.gpdi.hqplus.meeting.entity.query.MeetingQuery;
+import com.gpdi.hqplus.meeting.entity.vo.MeetingExtendProductVO;
+import com.gpdi.hqplus.meeting.entity.vo.MeetingProductVO;
+import com.gpdi.hqplus.meeting.service.IMeetingProductService;
+import com.gpdi.hqplus.meeting.service.IMeetingService;
+import com.gpdi.hqplus.resources.entity.ProductResource;
+import com.gpdi.hqplus.resources.entity.PropertyEquipment;
+import com.gpdi.hqplus.resources.entity.PropertyResource;
+import com.gpdi.hqplus.resources.entity.ServiceResource;
+import com.gpdi.hqplus.resources.entity.query.ProductListQuery;
+import com.gpdi.hqplus.resources.service.IPropertyEquipmentService;
+import com.gpdi.hqplus.resources.service.IServiceResourceService;
+import com.gpdi.hqplus.resources.service.impl.ProductResourceServiceImpl;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import springfox.documentation.spring.web.json.Json;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * @author: lianghb
+ * @create: 2019-07-12 21:40
+ **/
+@Slf4j
+@Service
+@Transactional(rollbackFor = Exception.class)
+public class MeetingProductServiceImpl extends ProductResourceServiceImpl implements IMeetingProductService {
+    @Autowired
+    private IdGenerator idGenerator;
+    @Autowired
+    private IMeetingService meetingService;
+    @Autowired
+    private IServiceResourceService serviceResourceService;
+    @Autowired
+    private IPropertyEquipmentService equipmentService;
+
+
+    @Override
+    public Page<MeetingProductVO> pageProduct(ProductListQuery query) {
+        query.setBusinessCode(BusinessCode.PROPERTY_MEETING_ROOM);
+        query.setStatus(ProductResource.STATUS_NORMAL);
+
+        Page<ProductResource> page = page(query);
+
+        // 获取商品列表
+        List<MeetingProductVO> productList = CollectionUtil.createArrayList();
+        Page<MeetingProductVO> result = BeanPowerHelper.mapPage(page, productList);
+        List<ProductResource> records = page.getRecords();
+        if (CollectionUtil.isEmpty(records)) {
+            BeanUtils.copyProperties(page, result);
+            return result;
+        }
+
+        // 转换商品 vo
+        Set<Long> propertyIdSet = CollectionUtil.createSet(records.size());
+        for (ProductResource resource : records) {
+            productList.add(product2VO(resource));
+            propertyIdSet.add(resource.getResourceId());
+        }
+
+        // 获取物业资源记录并更新 vo
+        Map<Long, PropertyResource> map = meetingService.listByIds(propertyIdSet);
+        for (MeetingProductVO record : result.getRecords()) {
+            PropertyResource propertyResource = map.get(record.getMeetingResourceId());
+            if (propertyResource == null) {
+                continue;
+            }
+            record.setName(propertyResource.getName());
+            record.setArea(propertyResource.getArea());
+            record.setSize(propertyResource.getSize());
+
+            // 封面，从 PropertyResource 中取
+            String extendVal = propertyResource.getExtendVal();
+            Map<String, String> extendMap = JsonUtil.json2Map(extendVal);
+            if (CollectionUtil.isEmpty(extendMap)) {
+                continue;
+            }
+            record.setCoverImg(extendMap.get(MeetingRoomConstants.MEETING_ROOM_EXTEND_COVER_IMG));
+        }
+
+        return result;
+    }
+
+    @Override
+    public void addNewProduct(MeetingProductQuery query) {
+        query.setId(idGenerator.getNumberId())
+                .setBusinessCode(BusinessCode.PROPERTY_MEETING_ROOM)
+                .setStatus(ProductResource.STATUS_NORMAL);
+
+        // 增值服务
+        Map<String, String> map = CollectionUtil.createHashMap(2);
+        map.put(MeetingRoomConstants.MEETING_ROOM_EXTEND_SERVICE_RESOURCES,
+                JsonUtil.bean2JsonString(query.getExtendProduct()));
+
+        query.setExtensionResource(JsonUtil.bean2JsonString(map));
+
+        // 获取增值服务信息
+
+        boolean insert = query.insert();
+        if (!insert) {
+            log.error("insert product resource fail:meeting");
+            throw new ApplicationException(ErrorCode.DATABASE_ERROR, "添加失败");
+        }
+    }
+
+    @Override
+    public MeetingProductVO getByProductId(Long id) {
+        ProductResource resource = baseMapper.selectById(id);
+        if (resource == null) {
+            throw new ApplicationException(ErrorCode.RESOURCES_NOT_FIND, "查询数据失败");
+        }
+        PropertyResource propertyResource = meetingService.getById(resource.getResourceId());
+
+        MeetingProductVO vo = product2VO(resource);
+        String extensionResource = resource.getExtensionResource();
+
+        Map<String, String> productExtendMap = JsonUtil.json2Map(extensionResource);
+        Map<String, String> propertyExtendMap = JsonUtil.json2Map(propertyResource.getExtendVal());
+
+        // 封面
+        vo.setCoverImg(propertyExtendMap.get(MeetingRoomConstants.MEETING_ROOM_EXTEND_COVER_IMG));
+
+        // 增值服务
+        String extendServiceJson = productExtendMap.get(MeetingRoomConstants.MEETING_ROOM_EXTEND_SERVICE_RESOURCES);
+        // 商品的 ids
+        Long[] ids = JsonUtil.json2Bean(extendServiceJson, Long[].class);
+        List<ProductResource> extendServiceResourceList = listByIds(ids);
+        if (CollectionUtil.isEmpty(extendServiceResourceList)) {
+            return vo;
+        }
+
+        // 通过商品的 ResourceId 获取增值服务的 id
+        Set<Long> serviceResIdSet = CollectionUtil.createSet(ids.length);
+        for (ProductResource productResource : extendServiceResourceList) {
+            serviceResIdSet.add(productResource.getResourceId());
+        }
+
+        List<MeetingExtendProductVO> extendProductVOList = CollectionUtil.createArrayList(extendServiceResourceList.size());
+        Map<Long, ServiceResource> serviceResourceMap = serviceResourceService.listByIds(serviceResIdSet);
+        for (ProductResource productResource : extendServiceResourceList) {
+            MeetingExtendProductVO extendProductVO = new MeetingExtendProductVO();
+            BeanUtils.copyProperties(productResource, extendProductVO);
+            extendProductVO.setPriceUnitCode(productResource.getPriceType());
+            ServiceResource serviceResource = serviceResourceMap.get(productResource.getResourceId());
+            if (serviceResource != null) {
+                extendProductVO.setName(serviceResource.getName());
+            }
+
+            extendProductVOList.add(extendProductVO);
+        }
+
+        // 设施
+        String equipment = propertyResource.getEquipment();
+        Long[] equipmentIds = null;
+        if (StringUtil.isNotBlank(equipment) &&
+                (equipmentIds = JsonUtil.json2Bean(equipment, Long[].class)) != null) {
+            vo.setEquipments(equipmentService.listByIds(equipmentIds));
+        }
+
+        vo.setName(propertyResource.getName());
+        vo.setSize(propertyResource.getSize());
+        vo.setArea(propertyResource.getArea());
+        vo.setExtendProduct(extendProductVOList);
+
+        return vo;
+    }
+
+    private List<ProductResource> listByIds(Long[] ids) {
+        return baseMapper.selectList(new QueryWrapper<ProductResource>()
+                .lambda()
+                .in(ProductResource::getId, ids)
+        );
+    }
+
+    /**
+     * ProductResource to MeetingProductVO
+     *
+     * @param resource
+     * @return
+     */
+    private MeetingProductVO product2VO(ProductResource resource) {
+        MeetingProductVO vo = new MeetingProductVO();
+        BeanUtils.copyProperties(resource, vo);
+        vo.setMeetingResourceId(resource.getResourceId());
+        vo.setPriceUnitCode(resource.getPriceType());
+
+        return vo;
+    }
+}

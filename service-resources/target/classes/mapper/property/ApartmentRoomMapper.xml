@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gpdi.hqplus.apartment.mapper.ApartmentRoomMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.gpdi.hqplus.apartment.entity.ApartmentRoom">
+        <id column="id" property="id" />
+        <result column="series_id" property="seriesId" />
+        <result column="name" property="name" />
+        <result column="min_price" property="minPrice" />
+        <result column="max_price" property="maxPrice" />
+        <result column="area" property="area" />
+        <result column="equipments" property="equipments" />
+        <result column="description" property="description" />
+        <result column="toward" property="toward" />
+        <result column="room_model" property="roomModel" />
+        <result column="rent_type" property="rentType" />
+        <result column="rent_time" property="rentTime" />
+        <result column="show_images" property="showImages" />
+        <result column="model_images" property="modelImages" />
+        <result column="status" property="status" />
+        <result column="version" property="version" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="project_code" property="projectCode" />
+    </resultMap>
+
+</mapper>

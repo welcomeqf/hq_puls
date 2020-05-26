@@ -1,0 +1,20 @@
+package com.gpdi.hqplus.builder.service;
+
+import com.gpdi.hqplus.builder.eneiry.query.BuildQuery;
+
+/**
+ * 用户端物业楼栋接口
+ * @Author qf
+ * @Date 2019/7/18
+ * @Version 1.0
+ */
+public interface IBuildAdminService {
+
+    /**
+     * 增加楼栋
+     * @param buildQuery
+     */
+    void insertBuild(BuildQuery buildQuery);
+
+
+}

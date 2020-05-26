@@ -1,0 +1,8 @@
+
+?squid:S11487"#Use a logger to log this exception.(€ÉÔ…ıÿÿÿÿ
+[squid:S21478"DCombine this catch with the one at line 54, which has the same body.(Å¡ß
+osquid:ModifiersOrderCheckA"EReorder the modifiers to comply with the Java Language Specification.(·Ğúàúÿÿÿÿ
+jsquid:ModifiersOrderCheck."EReorder the modifiers to comply with the Java Language Specification.(¯Õ¾ş
+Wsquid:S2864"4Iterate over the "entrySet" instead of the "keySet".(˜åº úÿÿÿÿ8ÕÇ¢…Ò-
+|squid:S4144A"`Update this method so that its implementation is not identical to "mapPartOverrider" on line 36.(·Ğúàúÿÿÿÿ
+?squid:S11489"#Use a logger to log this exception.(€ÉÔ…ıÿÿÿÿ

@@ -1,0 +1,38 @@
+package com.gpdi.hqplus.meeting.service;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gpdi.hqplus.meeting.entity.query.MeetingPageQuery;
+import com.gpdi.hqplus.meeting.entity.query.MeetingProductQuery;
+import com.gpdi.hqplus.meeting.entity.query.MeetingQuery;
+import com.gpdi.hqplus.meeting.entity.vo.MeetingProductVO;
+import com.gpdi.hqplus.resources.entity.PropertyResource;
+import com.gpdi.hqplus.resources.entity.query.ProductListQuery;
+
+import java.util.Map;
+
+/**
+ * 会议室商品
+ * @author: lianghb
+ * @create: 2019-07-12 21:38
+ **/
+public interface IMeetingProductService {
+    /**
+     * 分页获取会议室商品列表
+     * @param query
+     * @return
+     */
+    Page<MeetingProductVO> pageProduct(ProductListQuery query);
+
+    /**
+     * 添加新的产品
+     * @param query
+     */
+    void addNewProduct(MeetingProductQuery query);
+
+    /**
+     * 获取详情
+     * @param id
+     * @return
+     */
+    MeetingProductVO getByProductId(Long id);
+}

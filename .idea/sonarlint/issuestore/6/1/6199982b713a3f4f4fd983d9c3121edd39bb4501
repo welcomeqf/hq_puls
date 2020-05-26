@@ -1,0 +1,7 @@
+
+Œ"squid:ClassVariableVisibilityCheck!"YMake STATUS_NORMAL a static final constant or non-public and provide accessors if needed.(º€Áâùÿÿÿÿ
+Qsquid:S1444&"5Make this "public static STATUS_DISABLED" field final(‹æ¶Žþÿÿÿÿ
+vsquid:S3008&"ZRename this field "STATUS_DISABLED" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(‹æ¶Žþÿÿÿÿ
+Osquid:S1444!"3Make this "public static STATUS_NORMAL" field final(º€Áâùÿÿÿÿ
+Ž"squid:ClassVariableVisibilityCheck&"[Make STATUS_DISABLED a static final constant or non-public and provide accessors if needed.(‹æ¶Žþÿÿÿÿ
+tsquid:S3008!"XRename this field "STATUS_NORMAL" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(º€Áâùÿÿÿÿ

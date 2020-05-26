@@ -1,0 +1,11 @@
+
+‚squid:UselessImportCheck"RRemove this unused import 'com.gpdi.hqplus.complaint.cnastants.ComplaintTypeEnum'.(ÚÌ¨¯ÿÿÿÿÿ8ğÜïÀ-
+gsquid:CommentedOutCodeLinek"<This block of commented-out lines of code should be removed.(‘Ï•ãúÿÿÿÿ
+bsquid:CommentedOutCodeLinem"<This block of commented-out lines of code should be removed.(î€¥í
+?squid:S11703"!Make this final field static too.(ü´ƒù8¯™İï¿-
+]squid:S1155À">Use isEmpty() to check whether the collection is empty or not.(˜‰†á8”†øÃÁ-
+bsquid:CommentedOutCodeLine`"<This block of commented-out lines of code should be removed.(¡ÿœ
+]squid:UselessImportCheck"-Remove this unused import 'java.sql.Wrapper'.(³¿……ıÿÿÿÿ8Ú–«¾À-
+]squid:S1155—">Use isEmpty() to check whether the collection is empty or not.(˜‰†á8•ÒÑÃÁ-
+„squid:S1488z"aImmediately return this expression instead of assigning it to the temporary variable "complaint".(·©ƒÅøÿÿÿÿ8ñÕñÀ-
+wsquid:S001163"XRename this field "REGISTER_LOCK" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ü´ƒù8¯™İï¿-

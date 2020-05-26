@@ -1,0 +1,86 @@
+package com.gpdi.hqplus.complaint.entity;
+
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.activerecord.Model;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
+/**
+ * 意见反馈分类表
+ * @Author qf
+ * @Date 2019/7/16
+ * @Version 1.0
+ */
+@EqualsAndHashCode(callSuper = false)
+@Accessors(chain = true)
+@TableName("tb_complaint_type")
+@Data
+public class TypeComplaint extends Model<TypeComplaint> {
+
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * 状态：正常可用
+     */
+    public static String STATUS_NORMAL = "normal";
+
+    /**
+     * 状态：禁用
+     */
+    public static String STATUS_DISABLED = "disabled";
+
+    private Long id;
+
+    /**
+     * 分类名
+     */
+    private String name;
+
+    private String code;
+
+    /**
+     * 拓展信息
+     */
+    private String extendVal;
+
+    /**
+     * 状态
+     */
+    private String status;
+
+    /**
+     * 创建时间
+     */
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createTime;
+
+    /**
+     * 更新时间
+     */
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updateTime;
+
+    /**
+     * 版本
+     */
+    private Integer version;
+
+    private Integer projectCode;
+
+    /**
+     * 限制天数
+     */
+    private Integer limitDay;
+
+    @Override
+    protected Serializable pkVal() {
+        return this.id;
+    }
+
+}

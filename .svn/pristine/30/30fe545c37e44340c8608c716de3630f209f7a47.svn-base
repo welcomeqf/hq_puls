@@ -1,0 +1,26 @@
+package com.gpdi.hqplus.apartment.entity.params;
+
+import com.gpdi.hqplus.apartment.entity.query.EquipmentQuery;
+import com.gpdi.hqplus.apartment.entity.vo.ApartmentVO;
+import lombok.Data;
+
+import java.util.List;
+
+/**
+ * @Description 公寓接受参数
+ * @Author wzr
+ * @CreateDate 2019-07-08
+ * @Time 09:56
+ */
+@Data
+public class ApartmentParams extends ApartmentVO {
+    private List<Long> ids;
+    private String applyName;
+    private String gender;
+    private String phone;
+    private Long roomId;
+    private String applyTime;
+
+    private List<Long> roomIds;
+    private List<EquipmentQuery> equipmentIds;
+}

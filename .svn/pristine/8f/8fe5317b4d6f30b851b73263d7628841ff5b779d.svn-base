@@ -1,0 +1,59 @@
+package com.gpdi.hqplus.article.service;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gpdi.hqplus.resources.entity.SysBusinessFile;
+
+/**
+ * @Description 入驻申请须知管理service
+ * @Author wzr
+ * @CreateDate 2019-07-13
+ * @Time 10:42
+ */
+public interface NoticeFileService {
+
+    String SETTLE_NOTICE_IMAGE_CODE = "SETTLE_APPLICATION_NOTICE_MAIN_IMAGE";
+    String SETTLE_APPLICATION_EXCEL_CODE = "SETTLE_APPLICATION_NOTICE_EXCEL";
+
+    String PROPERTY_DECORATION_NOTICE_IMAGE_CODE = "DECORATION_NOTICE_MAIN_IMAGE";
+
+
+
+    /**
+     * 前端返回文件id，保存到数据库中
+     * @param sysBusinessFile
+     * @return
+     */
+    void uploadFile(SysBusinessFile sysBusinessFile);
+
+    /**
+     * 返回文件id
+     * 状态为可用的记录最多只有一条，返回该条
+     * 若都为不可用状态，则返回最新的记录
+     * @param code
+     * @return
+     */
+    Long getFileId(String code);
+
+    /**
+     * 分页查询文件列表
+     *
+     * @param page
+     * @param code
+     * @return
+     */
+    Page listByPage(Page page,String code);
+
+    /**
+     * 编辑文件
+     *
+     * @param sysBusinessFile
+     */
+    void edit(SysBusinessFile sysBusinessFile);
+
+    /**
+     * 启用或禁用文件
+     * @param sysBusinessFile
+     * @return
+     */
+	String disableOrUseById(SysBusinessFile sysBusinessFile);
+}

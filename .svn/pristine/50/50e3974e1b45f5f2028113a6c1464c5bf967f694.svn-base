@@ -1,0 +1,56 @@
+package com.gpdi.hqplus.apartment.service;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gpdi.hqplus.apartment.entity.params.ApartmentParams;
+import com.gpdi.hqplus.apartment.entity.query.ApartmentQuery;
+import com.gpdi.hqplus.apartment.entity.vo.ApartmentVO;
+
+/**
+ * @Description 公寓服务service
+ * @Author wzr
+ * @CreateDate 2019-07-04
+ * @Time 11:19
+ */
+public interface ApartmentService {
+
+    /**
+     * 分页查询公寓列表
+     * @param page
+     * @return
+     */
+    Page<ApartmentVO> listApartmentByPage(Page page);
+
+    /**
+     * 根据id查询公寓
+     * @param id
+     * @return
+     */
+    ApartmentVO getApartmentById(Long id);
+
+    /*以上为app端可用功能*/
+
+    /**
+     * 添加公寓，需要传入足够参数
+     * @param apartmentParams
+     */
+    void addApartment(ApartmentParams apartmentParams);
+
+    /**
+     * 删除公寓，默认通过id删除
+     * @param apartmentParams
+     */
+    void deleteApartment(ApartmentParams apartmentParams);
+
+    /**
+     * 编辑公寓，需要足够参数
+     * @param apartmentParams
+     */
+    void editApartment(ApartmentParams apartmentParams);
+
+    /**
+     * 动态条件分页查询公寓
+     * @param page
+     * @return
+     */
+    Page searchApartmentByPage(Page<ApartmentQuery> page);
+}

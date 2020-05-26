@@ -1,0 +1,70 @@
+# remark:基本脚手架 author:lianghb date:2019-05-21
+server:
+  port: 9009
+
+spring:
+  profiles:
+    active: #spring.profiles.active#
+#    active: local
+  application:
+    name: service-resources
+
+#feign:
+#  hystrix:
+#    enabled: true
+
+ribbon:
+  eureka:
+    enabled: true
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/*/*.xml
+
+# remark:应用定位id，每个独立部署的应用都不同，用于生产全局唯一id;范围均为[0,31];各模块 workerId 如下 author:lianghb date:2019-05-24
+# eureka:1
+# gateway:2
+# authentication:3
+# file:4
+# process:5
+# message:6
+# system:7
+# user:8
+# resources:9
+app:
+  workerId: 9
+  dataCenterId: 1
+
+#微信支付配置
+#mxhid 商户号
+#秘钥key
+#notify_url 回调接口
+wxpay:
+  appid: wxe4a9af4db320ef7a
+  mchid: 1484266082
+  key: 48A010DDF97A01F6D6826CF40E6EDECC
+  notify_url: http://192.168.1.209:9009/v1/app/payment/wxpay/notify
+
+
+
+#支付宝支付配置
+alipay:
+  #支付同步返回地址
+  aliReturnUrl: xxxxx
+  #支付异步通知地址
+  aliNotifyUrl: xxxxx
+  #  #产品码
+  productNo: QUICK_MSECURITY_PAY
+  #超时时间
+  timeExpress: 15m
+  #支付网关
+  url: https://openapi.alipaydev.com/gateway.do
+  #商户号
+  appid: 2016091500519530
+  #私钥
+  privateKey:
+  #公钥
+  aliPublicKey:
+  #加密方式
+  signType: RSA2
+  format: JSON
+  charset: UTF-8

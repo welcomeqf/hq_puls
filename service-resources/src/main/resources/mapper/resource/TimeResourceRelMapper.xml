@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gpdi.hqplus.resources.mapper.TimeResourceRelMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.gpdi.hqplus.resources.entity.TimeResourceRel">
+        <id column="id" property="id" />
+        <result column="business_code" property="businessCode" />
+        <result column="type" property="type" />
+        <result column="resource_id" property="resourceId" />
+        <result column="re_date" property="reDate" />
+        <result column="val" property="val" />
+        <result column="status" property="status" />
+        <result column="version" property="version" />
+        <result column="update_time" property="updateTime" />
+        <result column="create_time" property="createTime" />
+        <result column="project_code" property="projectCode" />
+    </resultMap>
+
+</mapper>

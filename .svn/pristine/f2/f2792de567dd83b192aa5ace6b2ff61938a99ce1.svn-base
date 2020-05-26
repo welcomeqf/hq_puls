@@ -1,0 +1,18 @@
+package com.gpdi.hqplus.complaint.entity.vo;
+
+
+import lombok.Data;
+
+/**
+ * 部门信息
+ * @Author qf
+ * @Date 2019/7/16
+ * @Version 1.0
+ */
+@Data
+public class ExtendValVO {
+
+    private Integer departmentId;
+    private String departmentName;
+
+}

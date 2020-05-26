@@ -1,0 +1,43 @@
+package com.gpdi.hqplus.common.config.security;
+
+import com.gpdi.hqplus.common.constants.RedisConstants;
+import com.gpdi.hqplus.common.entity.UserContext;
+import com.gpdi.hqplus.common.entity.UserDetail;
+import com.gpdi.hqplus.common.entity.UserInfo;
+import com.gpdi.hqplus.common.manager.RedisService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+
+/**
+ * 用户身份信息获取
+ *
+ * @author: lianghb
+ * @create: 2019-06-27 17:31
+ **/
+@Slf4j
+@Component
+public class CustomUserDetailsServiceImpl implements UserDetailsService {
+    private RedisService redisService;
+
+    @Autowired
+    public CustomUserDetailsServiceImpl(RedisService redisService) {
+        this.redisService = redisService;
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String redisKey) throws UsernameNotFoundException {
+        UserInfo userInfo = (UserInfo) redisService.get(RedisConstants.USER_INFO + redisKey);
+        log.info("redisKye:{},userinfo:{}", redisKey, userInfo);
+        if (userInfo != null) {
+            UserContext.set(userInfo);
+            return new UserDetail(redisKey, "", userInfo.getAuthorities());
+        }
+        log.error("get user info from redis fail!");
+        return null;
+    }
+}

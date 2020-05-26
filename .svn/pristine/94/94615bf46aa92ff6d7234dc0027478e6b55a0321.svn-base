@@ -1,0 +1,43 @@
+package com.gpdi.hqplus.resources.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.gpdi.hqplus.common.util.JsonUtil;
+import com.gpdi.hqplus.resources.entity.TimeResourceRel;
+import com.gpdi.hqplus.resources.mapper.TimeResourceRelMapper;
+import com.gpdi.hqplus.resources.service.ITimeResourceRelService;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+
+/**
+ * <p>
+ * <p>
+ * 商品资源 服务实现类
+ * </p>
+ *
+ * @author lianghb
+ * @since 2019-07-02
+ */
+@Slf4j
+@Service
+@Transactional(rollbackFor = Exception.class)
+public class TimeResourceRelServiceImpl extends ServiceImpl<TimeResourceRelMapper, TimeResourceRel> implements ITimeResourceRelService {
+
+    @Override
+    public int[] getByResIdDate(Long id, LocalDate date) {
+        TimeResourceRel timeResourceRel = baseMapper.selectOne(new QueryWrapper<TimeResourceRel>()
+                .lambda()
+                .eq(TimeResourceRel::getResourceId, id)
+                .eq(TimeResourceRel::getReDate, date)
+                .eq(TimeResourceRel::getStatus, TimeResourceRel.STATUS_NORMAL)
+        );
+        if (timeResourceRel == null) {
+            return new int[48];
+        }
+
+        return JsonUtil.json2Bean(timeResourceRel.getVal(), int[].class);
+    }
+}

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gpdi.hqplus.resources.mapper.ProductResourceMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.gpdi.hqplus.resources.entity.ProductResource">
+        <id column="id" property="id"/>
+        <result column="business_code" property="businessCode"/>
+        <result column="type" property="type"/>
+        <result column="resource_id" property="resourceId"/>
+        <result column="price" property="price"/>
+        <result column="min_price" property="minPrice"/>
+        <result column="max_price" property="maxPrice"/>
+        <result column="price_type" property="priceType"/>
+        <result column="extension_resource" property="extensionResource"/>
+        <result column="description" property="description"/>
+        <result column="context" property="context"/>
+        <result column="status" property="status"/>
+        <result column="version" property="version"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="project_code" property="projectCode"/>
+    </resultMap>
+
+    <select id="pageMeetingRoomProduct" parameterType="hashmap" resultMap="BaseResultMap">
+        select product.*
+        from tb_product_resource product
+        left join tb_property_resource property
+        on product.resource_id = property.id
+
+        <where>
+            <if test="businessCode != null and businessCode != ''">product.business_code = #{businessCode}</if>
+            <if test="name != null and name != ''">and property.name = #{name}</if>
+            <if test="status != null and status != ''">and product.status = #{status}</if>
+            <if test="minArea != null">and property.area &gt;= #{minArea}</if>
+            <if test="maxArea != null">and property.area &lt;= #{maxArea}</if>
+            <if test="minPrice != null">and product.price &gt;= #{minPrice}</if>
+            <if test="maxPrice != null">and product.price &lt;= #{maxPrice}</if>
+        </where>
+        order by product.id desc
+        limit #{startIndex},#{endIndex}
+    </select>
+
+    <select id="countMeetingRoomProduct" parameterType="hashmap" resultType="int">
+        select count(1)
+        from tb_product_resource product
+        left join tb_property_resource property
+        on product.resource_id = property.id
+
+        <where>
+            <if test="businessCode != null">product.business_code = #{businessCode}</if>
+            <if test="name != null">and property.name = #{name}</if>
+            <if test="status != null">and product.status = #{status}</if>
+            <if test="minArea != null">and property.area &gt;= #{minArea}</if>
+            <if test="maxArea != null">and property.area &lt;= #{maxArea}</if>
+            <if test="minPrice != null">and product.price &gt;= #{minPrice}</if>
+            <if test="maxPrice != null">and product.price &lt;= #{maxPrice}</if>
+        </where>
+    </select>
+</mapper>

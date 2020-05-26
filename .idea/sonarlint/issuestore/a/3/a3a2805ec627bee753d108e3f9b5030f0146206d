@@ -1,0 +1,5 @@
+
+5squid:S2119“"Save and re-use this "Random".(¼ÝÅf
+wsquid:S1149”"_Replace the synchronized class "StringBuffer" by an unsynchronized one such as "StringBuilder".(í…Ò‰
+?squid:S1148"#Use a logger to log this exception.(€ÉÔ…ýÿÿÿÿ
+Esquid:S1125:")Remove the literal "false" boolean value.(‹»–­þÿÿÿÿ

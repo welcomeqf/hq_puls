@@ -1,0 +1,76 @@
+package com.gpdi.hqplus.complaint.controller.app;
+
+import com.gpdi.hqplus.common.constants.ErrorCode;
+import com.gpdi.hqplus.common.exception.ApplicationException;
+import com.gpdi.hqplus.common.util.StringUtil;
+import com.gpdi.hqplus.complaint.cnastants.ComplaintHandleEnum;
+import com.gpdi.hqplus.complaint.entity.Complaint;
+import com.gpdi.hqplus.complaint.entity.query.ComplaintQuery;
+import com.gpdi.hqplus.complaint.service.IComplaintService;
+import com.gpdi.hqplus.complaint.util.ComplaintEnumUtil;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+/**
+ * 用户端的意见反馈控制器
+ * @Author qf
+ * @Date 2019/7/11
+ * @Version 1.0
+ */
+@Api
+@Slf4j
+@RestController
+@RequestMapping("/v1/app/resources/complaint")
+public class ComplaintController {
+
+    @Autowired
+    private IComplaintService complaintService;
+
+    /**
+     * 根据Id查询投诉建议的进度流程
+     *
+     * @param id
+     * @return
+     */
+    @ApiOperation(value = "查看流程进度", notes = "查看流程进度")
+    @ApiImplicitParam(name = "id", value = "id", required = true, dataType = "string", paramType = "path")
+    @GetMapping("/process/{id}")
+    public String queryProcess(@PathVariable("id") Long id) {
+        if (id == null) {
+            throw new ApplicationException(ErrorCode.PARAMETER_ERROR,"传入参数不能为空");
+        }
+        Complaint complaint = complaintService.queryById(id);
+
+        String status = complaint.getStatus();
+        ComplaintHandleEnum complaintHandleEnum = ComplaintEnumUtil.getByStatus(status);
+        String result = complaintHandleEnum.getMsg();
+        return result;
+    }
+
+    /**
+     * 申请意见反馈
+     *
+     * @param complaintQuery
+     * @return
+     */
+    @ApiOperation(value = "申请意见反馈", notes = "申请意见反馈")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "userName", value = "用户名", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "userConnect", value = "用户联系方式", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "message", value = "留言消息", required = true, dataType = "string", paramType = "path"),
+    })
+    @RequestMapping("/apply")
+    public Complaint insertComplaint(@RequestBody ComplaintQuery complaintQuery) {
+        if (StringUtil.isBlank(complaintQuery.getMessage())) {
+            throw new ApplicationException(ErrorCode.PARAMETER_ERROR,"留言参数不能为空");
+        }
+        Complaint apply = complaintService.apply(complaintQuery);
+        return apply;
+    }
+
+}

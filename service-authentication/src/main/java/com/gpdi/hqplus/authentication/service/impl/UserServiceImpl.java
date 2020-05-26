@@ -1,0 +1,138 @@
+package com.gpdi.hqplus.authentication.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.gpdi.hqplus.authentication.entity.User;
+import com.gpdi.hqplus.authentication.entity.UserExtend;
+import com.gpdi.hqplus.authentication.entity.query.LoginQuery;
+import com.gpdi.hqplus.authentication.entity.vo.LoginInfoVO;
+import com.gpdi.hqplus.authentication.mapper.UserMapper;
+import com.gpdi.hqplus.authentication.service.*;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.gpdi.hqplus.common.constants.ErrorCode;
+import com.gpdi.hqplus.common.constants.RedisConstants;
+import com.gpdi.hqplus.common.entity.UserContext;
+import com.gpdi.hqplus.common.entity.UserInfo;
+import com.gpdi.hqplus.common.exception.ApplicationException;
+import com.gpdi.hqplus.common.manager.RedisService;
+import com.gpdi.hqplus.common.util.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * <p>
+ * 用户表 服务实现类
+ * </p>
+ *
+ * @author lianghb
+ * @since 2019-07-01
+ */
+@Slf4j
+@Service
+@Transactional(rollbackFor = Exception.class)
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
+    @Autowired
+    private RedisService redisService;
+    @Autowired
+    private IdGenerator idGenerator;
+
+    @Autowired
+    private IUserExtendService extendService;
+    @Autowired
+    private IUserRoleRelService roleRelService;
+    @Autowired
+    private IRolePermRelService rolePermRelService;
+    @Autowired
+    private IUserDeptRelService deptRelService;
+
+
+    @Override
+    public LoginInfoVO login(LoginQuery query) {
+        User user = baseMapper.selectOne(new QueryWrapper<User>()
+                .lambda()
+                .eq(User::getPhone, query.getPhone())
+        );
+        // 账号是否存在
+        if (user == null) {
+            throw new ApplicationException(ErrorCode.AUTHENTICATION_ERROR, "账号或密码错误");
+        }
+
+        // 密码校验
+        boolean check = BCryptUtil.check(query.getPassword(), user.getPassword());
+        if (!check) {
+            throw new ApplicationException(ErrorCode.AUTHENTICATION_ERROR, "账号或密码错误");
+        }
+        // 获取扩展信息
+        UserExtend userExtend = extendService.getByUserId(user.getId());
+        if (userExtend == null) {
+            log.error("get user extend info error:{}", user.getId());
+            throw new ApplicationException(ErrorCode.SERVICE_ERROR, "获取用户信息失败");
+        }
+
+        // 组装登录信息，存 redis
+        String redisKey = idGenerator.getUuid();
+        String token = JwtTokenUtil.generateToken(redisKey);
+
+        UserInfo userInfo = user2UserInfo(user, userExtend, token, redisKey);
+        redisService.set(RedisConstants.USER_INFO + redisKey, userInfo, 604800);
+
+        return user2LoginInfoVO(user, userExtend, token);
+    }
+
+    @Override
+    public void logout() {
+        redisService.del(RedisConstants.USER_INFO + UserContext.get().getRedisKey());
+    }
+
+    private LoginInfoVO user2LoginInfoVO(User user, UserExtend userExtend, String token) {
+        LoginInfoVO vo = BeanPowerHelper.mapCompleteOverrider(user, LoginInfoVO.class);
+        vo.setImgSrc(userExtend.getImgSrc());
+        vo.setUserName(userExtend.getUserName());
+        vo.setToken(token);
+        return vo;
+    }
+
+    private UserInfo user2UserInfo(User user, UserExtend userExtend, String token, String redisKey) {
+        Set<String> roleSet = roleRelService.listRoleCodeByUserId(user.getId());
+        Set<String> permissionSet = rolePermRelService.listPermissionCodeByRoleList(roleSet);
+        Set<String> groupSet = deptRelService.listDeptByUserId(user.getId());
+
+        UserInfo info = BeanPowerHelper.mapCompleteOverrider(user, UserInfo.class);
+        info.setUserName(userExtend.getUserName());
+        info.setToken(token);
+        info.setRedisKey(redisKey);
+        info.setRoleSet(roleSet);
+        info.setPermissionSet(permissionSet);
+        info.setGroupSet(groupSet);
+
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        // 默认添加 activiti 用户权限
+        authorities.add(new SimpleGrantedAuthority("ROLE_ACTIVITI_USER"));
+        if (CollectionUtil.isNotEmpty(roleSet)) {
+            for (String roleCode : roleSet) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + roleCode));
+            }
+        }
+        if (CollectionUtil.isNotEmpty(permissionSet)) {
+            for (String roleCode : permissionSet) {
+                authorities.add(new SimpleGrantedAuthority("GROUP_" + roleCode));
+            }
+        }
+        if (CollectionUtil.isNotEmpty(groupSet)) {
+            for (String roleCode : groupSet) {
+                authorities.add(new SimpleGrantedAuthority("GROUP_" + roleCode));
+            }
+        }
+        info.setAuthorities(authorities);
+        return info;
+    }
+
+
+}

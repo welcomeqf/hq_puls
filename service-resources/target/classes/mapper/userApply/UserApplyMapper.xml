@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gpdi.hqplus.userapply.mapper.UserApplyMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.gpdi.hqplus.userapply.entity.UserApply">
+        <id column="id" property="id" />
+        <result column="enterprise_id" property="enterpriseId" />
+        <result column="user_id" property="userId" />
+        <result column="status" property="status" />
+        <result column="version" property="version" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="project_code" property="projectCode" />
+        <result column="property_unit" property="propertyUnit" />
+        <result column="job" property="job" />
+        <result column="email" property="email" />
+        <result column="name" property="name" />
+        <result column="phone" property="phone" />
+    </resultMap>
+
+    <select id="getUserApplyList" parameterType="com.gpdi.hqplus.common.util.PageUtil" resultType="com.gpdi.hqplus.userapply.entity.UserApplyVO">
+        SELECT tua.id,tu.user_type,tua.name,tua.phone,tua.`status`,tua.create_time,tua.update_time,tua.project_code,tua.email
+        FROM `tb_user_apply` tua
+        LEFT JOIN tb_user tu ON tu.id = tua.user_id
+        <where>
+            <if test="@com.gpdi.hqplus.common.util.Ognl@isNotEmpty(params)">
+                <if test="@com.gpdi.hqplus.common.util.Ognl@isString(params.name)">AND tua.name LIKE "%"#{params.name}"%" </if>
+                <if test="@com.gpdi.hqplus.common.util.Ognl@isString(params.phone)">AND tua.phone LIKE "%"#{params.phone}"%" </if>
+                <if test="@com.gpdi.hqplus.common.util.Ognl@isString(params.email)">AND tua.email = #{params.email} </if>
+                <if test="@com.gpdi.hqplus.common.util.Ognl@isString(params.propertyUnit)">AND tua.property_unit = #{params.propertyUnit} </if>
+                <if test="@com.gpdi.hqplus.common.util.Ognl@isString(params.job)">AND tua.job LIKE "%"#{params.job}"%" </if>
+                <if test="@com.gpdi.hqplus.common.util.Ognl@isString(params.status)">AND tua.status = #{params.status} </if>
+                <if test="@com.gpdi.hqplus.common.util.Ognl@isString(params.userType)">AND tu.user_type LIKE "%"#{params.userType}"%" </if>
+            </if>
+        </where>
+        ORDER BY tua.create_time
+    </select>
+    <update id="auditApply" parameterType="java.util.List">
+        <foreach collection="list" item="ids" index="index" open="" close="" separator=";">
+            update `tb_user_apply` <set> `status` = 'normal' </set>  where id = #{id}
+        </foreach>
+    </update>
+
+    <select id="getUserApplyDetailById" resultType="com.gpdi.hqplus.userapply.entity.UserApplyVO">
+        SELECT tua.id,tu.user_type,tua.name,tua.phone,tua.`status`,tua.create_time,tua.update_time,tua.project_code,tua.email
+        FROM `tb_user_apply` tua
+        LEFT JOIN tb_user tu ON tu.id = tua.user_id
+        <where>
+            <if test="@com.gpdi.hqplus.common.util.Ognl@isLong(value)">
+                AND tua.id = #{value}
+            </if>
+        </where>
+    </select>
+</mapper>

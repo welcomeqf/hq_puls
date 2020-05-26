@@ -1,0 +1,6 @@
+
+vsquid:UselessImportCheck"RRemove this unused import 'com.gpdi.hqplus.common.exception.ApplicationException'.(¨ü
+lsquid:UselessImportCheck	"HRemove this unused import 'com.gpdi.hqplus.common.util.BeanPowerHelper'.(á‘Şı
+psquid:UselessImportCheck"GRemove this unused import 'com.gpdi.hqplus.common.constants.ErrorCode'.(ê§¸©øÿÿÿÿ
+^squid:S2259S"HA "NullPointerException" could be thrown; "userExtend" is nullable here.(™…ø
+lsquid:UselessImportCheck"HRemove this unused import 'com.gpdi.hqplus.user.entity.vo.UserExtendVO'.(šâ•ü

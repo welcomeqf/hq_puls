@@ -1,0 +1,65 @@
+# remark:zuul网关 author:lianghb date:2019-05-22
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+      defaultZone: http://172.16.1.76:8761/eureka
+
+server:
+  port: 8099
+
+spring:
+  application:
+    name: gateway
+
+zuul:
+  routes:
+    api-content:
+      path: /*/*/authentication/**
+      serviceId: service-authentication
+      strip-prefix: false
+    api-user:
+      path: /*/*/user/**
+      serviceId: service-user
+      strip-prefix: false
+    api-order:
+      path: /*/*/file/**
+      serviceId: service-file
+      strip-prefix: false
+    api-appointment:
+      path: /*/*/process/**
+      serviceId: service-process
+      strip-prefix: false
+    api-integral:
+      path: /*/*/message/**
+      serviceId: service-message
+      strip-prefix: false
+    api-manager:
+      path: /*/*/system/**
+      serviceId: service-system
+      strip-prefix: false
+    api-pay:
+      path: /*/*/resources/**
+      serviceId: service-resources
+      strip-prefix: false
+
+ribbon:
+  ReadTimeout: 6000
+  SocketTimeout: 6000
+  MaxAutoRetries: 0
+  MaxAutoRetriesNextServer: 1
+
+# remark:应用定位id，每个独立部署的应用都不同，用于生产全局唯一id;范围均为[0,31];各模块 workerId 如下 author:lianghb date:2019-05-24
+# eureka:1
+# gateway:2
+# authentication:3
+# file:4
+# process:5
+# message:6
+# system:7
+# user:8
+# resources:9
+app:
+  workerId: 2
+  dataCenterId: 1

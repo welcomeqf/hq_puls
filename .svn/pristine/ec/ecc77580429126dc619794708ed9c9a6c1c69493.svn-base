@@ -1,0 +1,257 @@
+package com.gpdi.hqplus.process.controller.app;
+
+import com.gpdi.hqplus.common.constants.RabbitMqQueue;
+import com.gpdi.hqplus.common.manager.MQService;
+import com.gpdi.hqplus.common.manager.RedisService;
+import com.gpdi.hqplus.process.service.IProcessService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.activiti.api.runtime.shared.query.Page;
+import org.activiti.api.task.model.Task;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+/**
+ * App端接口，包括ios和安卓
+ * 如需要区分ios和安卓，可在uri中继续加以区分
+ *
+ * @author: lianghb
+ * @create: 2019-06-03 14:36
+ **/
+@Api
+@Slf4j
+@RestController
+@RequestMapping("/v1/app/process")
+public class ProcessController {
+    @Autowired
+    private IProcessService processService;
+
+    @Autowired
+    private MQService mqService;
+
+    /**
+     * 拾取并完成一个任务
+     *
+     * @param taskId
+     * @return
+     */
+    @ApiOperation(value = "拾取并完成一个任务", notes = "拾取并完成一个任务")
+    @ApiImplicitParam(name = "taskId", value = "任务 id", required = true, dataType = "String", paramType = "path")
+    @RequestMapping("/claimAndComplete")
+    public String claimAndComplete(String taskId) {
+        processService.claimAndComplete(taskId);
+        return "ok";
+    }
+
+
+    /**
+     * 获取任务列表
+     *
+     * @param startIndex
+     * @param endIndex
+     * @return
+     */
+    @ApiOperation(value = "hello world", notes = "根据url的name来获取hello world信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "startIndex", value = "开始索引", required = true, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "endIndex", value = "结束索引", required = true, dataType = "String", paramType = "path")
+    })
+    @PostMapping("/pageTasks")
+    public Page<Task> pageTasks(int startIndex, int endIndex) {
+        return processService.tasks(startIndex, endIndex);
+    }
+
+    /**
+     * 手动推动进度
+     *
+     * @param productPassId
+     * @return
+     */
+    //    @PreAuthorize("hasRole('address_office_customer')")
+    @ApiOperation(value = "手动推动进度", notes = "手动推动进度")
+    @ApiImplicitParam(name = "productPassId", value = "物品放行记录id", required = true, dataType = "String", paramType = "path")
+    @RequestMapping("/customer")
+    public String officeCustomer(String productPassId) {
+        //客服审批的权限
+        mqService.sendObject(RabbitMqQueue.PRODUCT_PASS_SUCCESS,productPassId);
+        return "ok";
+    }
+
+    /**
+     * 手动推动进度
+     *
+     * @param productPassId
+     * @return
+     */
+//    @PreAuthorize("hasRole('address_office_supervisor')")
+    @ApiOperation(value = "手动推动进度", notes = "手动推动进度")
+    @ApiImplicitParam(name = "productPassId", value = "物品放行记录id", required = true, dataType = "String", paramType = "path")
+    @RequestMapping("/supervisor")
+    public String officeSupervisor(String productPassId) {
+        //客服主管审批的权限
+        mqService.sendObject(RabbitMqQueue.PRODUCT_PASS_SUCCESS,productPassId);
+        return "ok";
+    }
+
+
+    /**
+     * 手动推动进度
+     *
+     * @param productPassId
+     * @return
+     */
+//    @PreAuthorize("hasRole('address_apartment_housekeeper')")
+    @ApiOperation(value = "手动推动进度", notes = "手动推动进度")
+    @ApiImplicitParam(name = "productPassId", value = "物品放行记录id", required = true, dataType = "String", paramType = "path")
+    @RequestMapping("/housekeeper")
+    public String apartmentHousekeeper(String productPassId) {
+        //管家审批
+        mqService.sendObject(RabbitMqQueue.PRODUCT_PASS_SUCCESS,productPassId);
+        return "ok";
+    }
+
+
+    /**
+     * 手动推动进度
+     *
+     * @param productPassId
+     * @return
+     */
+//    @PreAuthorize("hasRole('status_policemen')")
+    @ApiOperation(value = "手动推动进度", notes = "手动推动进度")
+    @ApiImplicitParam(name = "productPassId", value = "物品放行记录id", required = true, dataType = "String", paramType = "path")
+    @RequestMapping("/policemen")
+    public String policemen(String productPassId) {
+        //保安放行
+        mqService.sendObject(RabbitMqQueue.PRODUCT_PASS_SUCCESS,productPassId);
+        return "ok";
+    }
+
+
+    /**
+     * 拒绝申请
+     *
+     * @param productPassId
+     * @return
+     */
+//    @PreAuthorize("hasRole('address_office_customer')")
+    @ApiOperation(value = "拒绝放行", notes = "拒绝放行")
+    @ApiImplicitParam(name = "productPassId", value = "物品放行记录id", required = true, dataType = "String", paramType = "path")
+    @RequestMapping("/customerFail")
+    public String officeCustomerFail(String productPassId) {
+        mqService.sendObject(RabbitMqQueue.PRODUCT_PASS_FAIL,productPassId);
+        return "ok";
+    }
+
+    /**
+     * 拒绝申请
+     *
+     * @param productPassId
+     * @return
+     */
+//    @PreAuthorize("hasRole('address_office_supervisor')")
+    @ApiOperation(value = "拒绝放行", notes = "拒绝放行")
+    @ApiImplicitParam(name = "productPassId", value = "物品放行记录id", required = true, dataType = "String", paramType = "path")
+    @RequestMapping("/supervisorFail")
+    public String officeSupervisorFail(String productPassId) {
+        mqService.sendObject(RabbitMqQueue.PRODUCT_PASS_FAIL,productPassId);
+        return "ok";
+    }
+
+    /**
+     * 拒绝申请
+     *
+     * @param productPassId
+     * @return
+     */
+//    @PreAuthorize("hasRole('address_apartment_housekeeper')")
+    @ApiOperation(value = "拒绝放行", notes = "拒绝放行")
+    @ApiImplicitParam(name = "productPassId", value = "物品放行记录id", required = true, dataType = "String", paramType = "path")
+    @RequestMapping("/housekeeperFail")
+    public String housekeeperFail(String productPassId) {
+        mqService.sendObject(RabbitMqQueue.PRODUCT_PASS_FAIL,productPassId);
+        return "ok";
+    }
+
+
+    /**
+     * 拒绝申请
+     *
+     * @param productPassId
+     * @return
+     */
+//    @PreAuthorize("hasRole('status_policemen')")
+    @ApiOperation(value = "拒绝放行", notes = "拒绝放行")
+    @ApiImplicitParam(name = "productPassId", value = "物品放行记录id", required = true, dataType = "String", paramType = "path")
+    @RequestMapping("/policemenFail")
+    public String policemenFail(String productPassId) {
+        mqService.sendObject(RabbitMqQueue.PRODUCT_PASS_FAIL,productPassId);
+        return "ok";
+    }
+
+    //========================================物业报修=============================================
+
+    /**
+     * 手动推动进度
+     *
+     * @param maintainId
+     * @return
+     */
+    @ApiOperation(value = "手动推动进度", notes = "手动推动进度")
+    @ApiImplicitParam(name = "maintainId", value = "物业维修id", required = true, dataType = "String", paramType = "path")
+    @RequestMapping("/assign")
+    public String assign(String maintainId) {
+        //审核派单
+        mqService.sendObject(RabbitMqQueue.PRODUCT_PASS_SUCCESS,maintainId);
+        return "ok";
+    }
+
+    /**
+     * 拒绝申请
+     *
+     * @param maintainId
+     * @return
+     */
+    @ApiOperation(value = "拒绝", notes = "拒绝")
+    @ApiImplicitParam(name = "maintainId", value = "物业维修id", required = true, dataType = "String", paramType = "path")
+    @RequestMapping("/assignFail")
+    public String assignFail(String maintainId) {
+        mqService.sendObject(RabbitMqQueue.PRODUCT_PASS_FAIL,maintainId);
+        return "ok";
+    }
+
+
+    /**
+     * 手动推动进度
+     *
+     * @param maintainId
+     * @return
+     */
+    @ApiOperation(value = "手动推动进度", notes = "手动推动进度")
+    @ApiImplicitParam(name = "maintainId", value = "物业维修id", required = true, dataType = "String", paramType = "path")
+    @RequestMapping("/maintain")
+    public String maintain(String maintainId) {
+        //维修
+        mqService.sendObject(RabbitMqQueue.PRODUCT_PASS_SUCCESS,maintainId);
+        return "ok";
+    }
+
+
+    /**
+     * 拒绝申请
+     *
+     * @param maintainId
+     * @return
+     */
+    @ApiOperation(value = "拒绝", notes = "拒绝")
+    @ApiImplicitParam(name = "maintainId", value = "物业维修id", required = true, dataType = "String", paramType = "path")
+    @RequestMapping("/maintainFail")
+    public String maintainFail(String maintainId) {
+        mqService.sendObject(RabbitMqQueue.PRODUCT_PASS_FAIL,maintainId);
+        return "ok";
+    }
+}

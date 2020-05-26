@@ -1,0 +1,7 @@
+
+Œsquid:S1319_"pThe return type of this method should be an interface such as "List" rather than the implementation "ArrayList".(çœä½üÿÿÿÿ
+Œsquid:S1319T"pThe return type of this method should be an interface such as "List" rather than the implementation "ArrayList".(ÏßÃøÿÿÿÿ
+‰squid:S1319J"mThe return type of this method should be an interface such as "Map" rather than the implementation "HashMap".(Ðá„÷ÿÿÿÿÿ
+‰squid:S1319>"mThe return type of this method should be an interface such as "Map" rather than the implementation "HashMap".(Š¹ôâøÿÿÿÿ
+Tsquid:S1155*">Use isEmpty() to check whether the collection is empty or not.(¯Þón
+Usquid:S11554">Use isEmpty() to check whether the collection is empty or not.(¼î¸½

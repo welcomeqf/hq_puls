@@ -1,0 +1,130 @@
+package com.gpdi.hqplus.officebuild.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gpdi.hqplus.common.constants.BusinessCode;
+import com.gpdi.hqplus.common.constants.ErrorCode;
+import com.gpdi.hqplus.common.entity.UserContext;
+import com.gpdi.hqplus.common.entity.UserInfo;
+import com.gpdi.hqplus.common.exception.ApplicationException;
+import com.gpdi.hqplus.common.util.*;
+import com.gpdi.hqplus.officebuild.entity.OfficeBookVO;
+import com.gpdi.hqplus.officebuild.service.OfficeBookService;
+import com.gpdi.hqplus.resources.constants.ResourceType;
+import com.gpdi.hqplus.resources.entity.Book;
+import com.gpdi.hqplus.resources.service.impl.BookServiceImpl;
+import com.gpdi.hqplus.resources.util.CopyProperties;
+import com.gpdi.hqplus.resources.validate.CheckEmptyUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
+import java.util.List;
+
+/**
+ * @Description 写字楼系列预约事项
+ * @Author wzr
+ * @CreateDate 2019-07-10
+ * @Time 14:54
+ */
+@Slf4j
+@Service
+@Transactional(rollbackFor = Exception.class)
+public class OfficeBookServiceImpl extends BookServiceImpl implements OfficeBookService {
+
+    @Autowired
+    IdGenerator idGenerator;
+
+    /**
+     * 预约写字楼系列
+     * @param officeBookVO
+     */
+    @Override
+    public void book(OfficeBookVO officeBookVO) {
+        String[] params = {"officeId","applyTime","name","phone"};
+        CheckEmptyUtil.check(JsonUtil.bean2Map(officeBookVO),params);
+        UserInfo userInfo = UserContext.get();
+        //设置参数
+        Book book = officeBook2book(officeBookVO);
+        book.setId(idGenerator.getNumberId());
+        book.setBusinessCode(BusinessCode.PROPERTY_OFFICE_BUILD);
+        book.setUserId(userInfo.getId());
+        book.setExtendVal(JsonUtil.bean2JsonString(officeBookVO));
+        book.setStatus(Book.STATUS_NORMAL);
+        book.setResourceId(officeBookVO.getOfficeId());
+        book.setType(ResourceType.OFFICE_TYPE);
+
+        int insert = baseMapper.insert(book);
+        if (insert !=1){
+            log.error("写字楼系列预约失败，系列id="+officeBookVO.getOfficeId());
+            throw new ApplicationException(ErrorCode.SERVICE_ERROR,"写字楼系列预约失败，请重试");
+        }
+    }
+
+    /**
+     * 根据写字楼系列id分页查询预约记录
+     *
+     * @param page
+     * @return
+     */
+    @Override
+    public Page listByPageAndOfficeId(Page<OfficeBookVO> page) {
+        List<OfficeBookVO> records = page.getRecords();
+        //入参必须要有officeId
+        if (CollectionUtil.isNotEmpty(records)){
+            Long officeId = records.get(0).getOfficeId();
+            Page<Book> bookPage = new Page<>();
+            //将原先的page里面的参数复制到新的bookPage里
+            //因为两者的records数据类型不同，所以应该不会复制
+            CopyProperties.copyAll(page,bookPage);
+            baseMapper.selectPage(bookPage, new QueryWrapper<Book>()
+                    .lambda()
+                    .eq(Book::getResourceId, officeId)
+                    .eq(Book::getBusinessCode, BusinessCode.PROPERTY_OFFICE_BUILD)
+                    .eq(Book::getType, ResourceType.OFFICE_TYPE)
+                    .eq(Book::getStatus, Book.STATUS_NORMAL)
+                    .orderByDesc(Book::getCreateTime)
+            );
+            List<Book> bookRecords = bookPage.getRecords();
+            //初始化records
+            records = CollectionUtil.createArrayList();
+            if (CollectionUtil.isNotEmpty(bookRecords)){
+
+                for (Book record:bookRecords){
+                    OfficeBookVO officeBookVO = book2officeBook(record);
+                    records.add(officeBookVO);
+                }
+            }
+            //如果查询结果为空，则清空原先的records
+            page.setRecords(records);
+        }
+        return page;
+    }
+
+    public OfficeBookVO book2officeBook(Book book){
+        OfficeBookVO officeBookVO = new OfficeBookVO();
+        CopyProperties.copyAll(book,officeBookVO);
+        officeBookVO.setOfficeId(book.getResourceId());
+        String extendVal = book.getExtendVal();
+        if (StringUtil.isNotEmpty(extendVal)){
+            OfficeBookVO extendVO = JsonUtil.json2Bean(extendVal, OfficeBookVO.class);
+            officeBookVO.setName(extendVO.getName());
+            officeBookVO.setPhone(extendVO.getPhone());
+        }
+        return officeBookVO;
+    }
+
+    public Book officeBook2book(OfficeBookVO officeBookVO){
+        Book book = new Book();
+        CopyProperties.copyAll(officeBookVO,book);
+        HashMap<String, Object> map = CollectionUtil.createHashMap();
+        map.put("name",officeBookVO.getName());
+        map.put("phone",officeBookVO.getPhone());
+        book.setExtendVal(JsonUtil.bean2JsonString(map));
+        book.setResourceId(officeBookVO.getOfficeId());
+        return book;
+    }
+
+}

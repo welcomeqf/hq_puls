@@ -1,0 +1,119 @@
+package com.gpdi.hqplus.meeting.controller.app;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gpdi.hqplus.common.constants.ErrorCode;
+import com.gpdi.hqplus.common.exception.ApplicationException;
+import com.gpdi.hqplus.common.validate.PageQueryValidate;
+import com.gpdi.hqplus.meeting.entity.query.MeetingBookQuery;
+import com.gpdi.hqplus.meeting.entity.vo.MeetingProductVO;
+import com.gpdi.hqplus.meeting.entity.vo.TimeBitVO;
+import com.gpdi.hqplus.meeting.service.IMeetingProductService;
+import com.gpdi.hqplus.meeting.service.IMeetingService;
+import com.gpdi.hqplus.meeting.validate.MeetingValidate;
+import com.gpdi.hqplus.resources.entity.query.ProductListQuery;
+import com.gpdi.hqplus.resources.entity.query.TimeResourceQuery;
+import com.gpdi.hqplus.resources.service.ITimeResourceRelService;
+import com.gpdi.hqplus.resources.validate.TimeResourceValidate;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * 会议室租赁接口
+ * @author: lianghb
+ * @create: 2019-07-13 10:28
+ **/
+@Api
+@Slf4j
+@RestController
+@RequestMapping("/v1/app/resources/meeting")
+public class MeetingProductAppController {
+    @Autowired
+    private IMeetingService meetingService;
+    @Autowired
+    private IMeetingProductService productService;
+    @Autowired
+    private ITimeResourceRelService timeResourceRelService;
+
+    /**
+     * <p>
+     * 获取会议室租赁列表
+     * </p>
+     *
+     * @return
+     */
+    @ApiOperation(value = "获取会议室租赁列表", notes = "获取会议室租赁列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "current", value = "当前页", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "size", value = "每页记录数", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "params.address", value = "地址", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "params.minSize", value = "最小容纳人数", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "params.maxSize", value = "最大容纳人数", required = true, dataType = "string", paramType = "path")
+    })
+    @PostMapping("/pageProduct")
+    public Page<MeetingProductVO> apply(@RequestBody ProductListQuery query) {
+        PageQueryValidate.check(query);
+        return productService.pageProduct(query);
+    }
+
+    /**
+     * <p>
+     * 获取会议室租赁详情
+     * </p>
+     *
+     * @return
+     */
+    @ApiOperation(value = "获取会议室租赁详情", notes = "获取会议室租赁详情")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "商品 id", required = true, dataType = "string", paramType = "path")
+    })
+    @GetMapping("/detail")
+    public MeetingProductVO getDetail(@RequestParam Long id) {
+        if (id == null) {
+            throw new ApplicationException(ErrorCode.PARAMETER_ERROR, "id 不能为空");
+        }
+        return productService.getByProductId(id);
+    }
+
+    /**
+     * <p>
+     * 根据时间获取预定情况
+     * </p>
+     *
+     * @return
+     */
+    @ApiOperation(value = "根据时间获取预定情况", notes = "根据时间获取预定情况")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "资源id", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "date", value = "日期", required = true, dataType = "string", paramType = "path")
+    })
+    @PostMapping("/getBookByDate")
+    public List<TimeBitVO> getBookByDate(@RequestBody TimeResourceQuery query) {
+        TimeResourceValidate.checkTimeResourceQuery(query);
+        return meetingService.getTimeBit(query);
+    }
+
+    /**
+     * <p>
+     * 提交会议室订单
+     * </p>
+     *
+     * @return
+     */
+    @ApiOperation(value = "提交会议室订单", notes = "提交会议室订单")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "资源id", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "date", value = "日期", required = true, dataType = "string", paramType = "path")
+    })
+    @PostMapping("/book")
+    public void book(@RequestBody MeetingBookQuery query) {
+        MeetingValidate.checkBookQuery(query);
+        productService.createBookOrder(query);
+    }
+}

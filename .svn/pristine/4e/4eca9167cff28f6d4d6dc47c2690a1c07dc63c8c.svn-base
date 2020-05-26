@@ -1,0 +1,95 @@
+package com.gpdi.hqplus.pass.controller.app;
+
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gpdi.hqplus.common.constants.ErrorCode;
+import com.gpdi.hqplus.common.entity.UserContext;
+import com.gpdi.hqplus.common.exception.ApplicationException;
+import com.gpdi.hqplus.common.util.IdGenerator;
+import com.gpdi.hqplus.common.validate.StringValidate;
+import com.gpdi.hqplus.pass.constans.ProductPassEnum;
+import com.gpdi.hqplus.pass.entity.ProductPass;
+import com.gpdi.hqplus.pass.service.IProductPassService;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import java.time.LocalDateTime;
+
+
+
+/**
+ * <p>
+ * 前端控制器
+ * </p>
+ *
+ * @author zake
+ * @since 2019-07-05
+ */
+@RestController
+@RequestMapping("/v1/app/resources/pass/productPass")
+@Slf4j
+public class ProductPassController {
+
+    @Autowired
+    private IProductPassService passService;
+    @Autowired
+    private IdGenerator idGenerator;
+
+
+
+    @ApiOperation(value = "物品放行提交申请")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "username", value = "姓名", required = true, dataType = "String", paramType = "query"),
+            @ApiImplicitParam(name = "address", value = "申请人地址", dataType = "String", required = true, paramType = "query"),
+            @ApiImplicitParam(name = "remark", value = "备注", dataType = "String", required = false, paramType = "query"),
+            @ApiImplicitParam(name = "phoneNumber", value = "联系方式", dataType = "String", required = false, paramType = "query"),
+            @ApiImplicitParam(name = "passDate", value = "申请放行时间", dataType = "date", required = true, paramType = "query"),
+            @ApiImplicitParam(name = "addressType", value = "物品放行地址", dataType = "String", required = true, paramType = "query")
+    })
+
+    @PostMapping("/submit")
+    public void submit(@RequestBody ProductPass pass) {
+         StringValidate.requireNotBlank(pass.getUsername(), "用户名不能为空");
+        StringValidate.requireNotBlank(pass.getAddress(), "地址不能为空");
+        StringValidate.requireNotBlank(pass.getPhoneNumber(), "联系方式不能为空");
+        StringValidate.requireNotBlank(pass.getAddressType(), "物品放行地址不能为空");
+        LocalDateTime passDate = pass.getPassDate();
+        if (passDate == null) {
+            throw new ApplicationException(ErrorCode.PARAMETER_ERROR);
+        }
+        pass.setUserId(UserContext.get().getId());
+        long numberId = idGenerator.getNumberId();
+        pass.setId(numberId);
+        pass.setCreateTime(LocalDateTime.now());
+        pass.setStatus(ProductPassEnum.STATUS_REVIEW.getStatus());
+        passService.submit(pass);
+    }
+
+    @ApiOperation(value = "物品放行提交申请记录")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "size", value = "每页显示数", required = true, dataType = "long", paramType = "path"),
+            @ApiImplicitParam(name = "current", value = "当前页", required = true, dataType = "long", paramType = "path")
+    })
+    @PostMapping("/list")
+    public Page list(@RequestBody Page page) {
+        return passService.list(page);
+    }
+
+
+
+
+    @ApiOperation(value = "物品放行提交申请取消")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "申请记录id", required = true, dataType = "String", paramType = "path")
+    })
+    @GetMapping("/delete")
+    public void delete(String id) {
+        StringValidate.requireNotBlank(id, "申请记录id不能为空");
+        passService.deleteSubmit(id);
+    }
+
+}
+

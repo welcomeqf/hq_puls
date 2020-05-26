@@ -1,0 +1,8 @@
+package com.gpdi.hqplus.user.entity.vo;
+
+/**
+ * @author: lianghb
+ * @create: 2019-07-01 23:45
+ **/
+public class RoleListVO {
+}

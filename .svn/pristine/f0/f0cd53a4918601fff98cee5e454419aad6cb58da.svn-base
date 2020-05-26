@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gpdi.hqplus.apartment.mapper.ApartmentApplyMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.gpdi.hqplus.apartment.entity.ApartmentApply">
+        <id column="id" property="id" />
+        <result column="series_id" property="seriesId" />
+        <result column="room_id" property="roomId" />
+        <result column="user_id" property="userId" />
+        <result column="principal_id" property="principalId" />
+        <result column="user_name" property="userName" />
+        <result column="user_connect" property="userConnect" />
+        <result column="user_message" property="userMessage" />
+        <result column="apply_date" property="applyDate" />
+        <result column="last_enter_time" property="lastEnterTime" />
+        <result column="status" property="status" />
+        <result column="version" property="version" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="project_code" property="projectCode" />
+    </resultMap>
+
+    <resultMap id="ApplyManagerListVO" type="com.gpdi.hqplus.apartment.entity.vo.ApplyManagerListVO">
+        <id column="id" property="id" />
+        <result column="series_name" property="seriesName" />
+        <result column="room_name" property="roomName" />
+        <result column="user_name" property="userName" />
+        <result column="user_connect" property="userConnect" />
+        <result column="create_time" property="createTime" />
+        <result column="apply_date" property="applyDate" />
+        <result column="principal_name" property="principalName" />
+    </resultMap>
+
+    <select id="pageManager" parameterType="hashmap" resultMap="ApplyManagerListVO">
+        select
+            a.id,
+            s.name as series_name,
+            r.name as room_name,
+            a.user_name,
+            a.user_connect,
+            a.create_time,
+            a.apply_date,
+            u.user_name as principal_name
+        from tb_apartment_apply a
+        left join tb_apartment_series s
+        on a.series_id = s.id
+        left join tb_apartment_room r
+        on a.room_id = r.id
+        left join tb_user_extend u
+        on a.principal_id = u.user_id
+
+        <where>
+            <if test="seriesName != null and seriesName != ''">s.name like #{seriesName}</if>
+            <if test="roomName != null and roomName != ''">and r.name like #{roomName}</if>
+            <if test="userName != null and userName != ''">and a.user_name like #{userName}</if>
+            <if test="principalId != null and principalId != ''">and a.principal_id =  #{principalId}</if>
+            <if test="applyStartTime != null">and a.apply_date &gt;= #{applyStartTime}</if>
+            <if test="applyEndTime != null">and a.apply_date &lt;= #{applyEndTime}</if>
+            <if test="createStartTime != null">and a.create_time &gt;= #{createStartTime}</if>
+            <if test="createEndTime != null">and a.create_time &lt;= #{createEndTime}</if>
+        </where>
+
+        order by a.id desc
+        limit #{startIndex},#{endIndex}
+    </select>
+
+    <select id="pageManagerCount" parameterType="hashmap" resultType="int">
+        select count(1)
+        from tb_apartment_apply a
+        left join tb_apartment_series s
+        on a.series_id = s.id
+        left join tb_apartment_room r
+        on a.room_id = r.id
+        left join tb_user_extend u
+        on a.principal_id = u.user_id
+
+        <where>
+            <if test="seriesName != null">s.name like #{seriesName}</if>
+            <if test="roomName != null">and r.name like #{roomName}</if>
+            <if test="userName != null">and a.user_name like #{userName}</if>
+            <if test="principalId != null">and a.principal_id =  #{principalId}</if>
+            <if test="applyStartTime != null">and a.apply_date &gt;= #{applyStartTime}</if>
+            <if test="applyEndTime != null">and a.apply_date &lt;= #{applyEndTime}</if>
+            <if test="createStartTime != null">and a.create_time &gt;= #{createStartTime}</if>
+            <if test="createEndTime != null">and a.create_time &lt;= #{createEndTime}</if>
+        </where>
+    </select>
+</mapper>

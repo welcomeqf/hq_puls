@@ -1,0 +1,15 @@
+package com.gpdi.hqplus.resources.entity.query;
+
+import com.gpdi.hqplus.resources.entity.ProductResource;
+import com.gpdi.hqplus.resources.entity.PropertyResource;
+import lombok.Data;
+
+/**
+ * @author: lianghb
+ * @create: 2019-07-06 14:23
+ **/
+@Data
+public class PropertyQuery extends PropertyResource {
+    private String[] fileNames;
+    private String coverFile;
+}

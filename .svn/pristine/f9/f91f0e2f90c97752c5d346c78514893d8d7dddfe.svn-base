@@ -1,0 +1,27 @@
+package com.gpdi.hqplus.complaint.validate;
+
+import com.gpdi.hqplus.complaint.entity.query.TypeComplaintManageQuery;
+import com.gpdi.hqplus.complaint.entity.vo.AdminComplaintDel;
+import com.gpdi.hqplus.complaint.entity.vo.ComplaintTypeVo;
+
+/**
+ * @Author qf
+ * @Date 2019/7/20
+ * @Version 1.0
+ */
+public class ComplaintAdminDate {
+
+    public static ComplaintTypeVo getVo(Long days, Long day, AdminComplaintDel complaintDel, TypeComplaintManageQuery typeComplaint){
+
+        ComplaintTypeVo complaintTypeVo = new ComplaintTypeVo();
+
+        if (days > day) {
+            complaintTypeVo.setCode("500");
+            return complaintTypeVo;
+        }
+        complaintTypeVo.setBid(complaintDel.getBid());
+        complaintTypeVo.setTypeName(typeComplaint.getName());
+        complaintTypeVo.setCode("200");
+        return complaintTypeVo;
+    }
+}

@@ -1,0 +1,38 @@
+package com.gpdi.hqplus.meeting.service;
+
+import com.gpdi.hqplus.resources.entity.PropertyResource;
+import com.gpdi.hqplus.resources.entity.query.PropertyQuery;
+
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * 会议室资源
+ *
+ * @author: lianghb
+ * @create: 2019-07-12 21:38
+ **/
+public interface IMeetingService {
+
+    /**
+     * 添加新会议室资源
+     *
+     * @param query
+     */
+    void addNewMeetingProperty(PropertyQuery query);
+
+    /**
+     * 获取会议室资源
+     *
+     * @param idSet
+     * @return
+     */
+    Map<Long, PropertyResource> listByIds(Set<Long> idSet);
+
+    /**
+     * 通过 id 获取会议室资源
+     * @param id
+     * @return
+     */
+    PropertyResource getById(Long id);
+}

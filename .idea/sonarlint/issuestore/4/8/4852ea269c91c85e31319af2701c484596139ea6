@@ -1,0 +1,25 @@
+
+=squid:S1659‰" Declare "c4" on a separate line.(ÀßçÖùÿÿÿÿ
+u
+squid:S135Ž"YReduce the total number of break and continue statements in this loop to use at most one.(ú²õ«üÿÿÿÿ
+ž%squid:RedundantThrowsDeclarationCheck]"mRemove the declaration of thrown exception 'java.lang.IllegalArgumentException' which is a runtime exception.(Ð™ŽÖ
+<squid:S1659‰"Declare "o" on a separate line.(ÀßçÖùÿÿÿÿ
+<squid:S1659`" Declare "c2" on a separate line.(ÞÝ¸üÿÿÿÿ
+jsquid:S3008"SRename this field "index_64" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(™œÛ®
+wsquid:S1149†"_Replace the synchronized class "StringBuffer" by an unsynchronized one such as "StringBuilder".(‡ž•î
+Qsquid:S1118":Add a private constructor to hide the implicit public one.(°ýˆÌ
+=squid:S1659‰" Declare "c3" on a separate line.(ÀßçÖùÿÿÿÿ
+=squid:S1659‰" Declare "c2" on a separate line.(ÀßçÖùÿÿÿÿ
+t
+squid:S135f"YReduce the total number of break and continue statements in this loop to use at most one.(ÅöÖžûÿÿÿÿ
+vsquid:S1149_"_Replace the synchronized class "StringBuffer" by an unsynchronized one such as "StringBuilder".(‡ž•î
+Tsquid:S1197""8Move the array designator from the variable to the type.(äÏÔÎùÿÿÿÿ
+Osquid:S1197]"8Move the array designator from the variable to the type.(Ð™ŽÖ
+Tsquid:S1197C"8Move the array designator from the variable to the type.(äÏÔÎùÿÿÿÿ
+¤%squid:RedundantThrowsDeclarationCheck…"mRemove the declaration of thrown exception 'java.lang.IllegalArgumentException' which is a runtime exception.(·Ò½›ùÿÿÿÿ
+:squid:S1659‡""Declare "olen" on a separate line.(†Î¡Ã
+:squid:S1659‡""Declare "slen" on a separate line.(†Î¡Ã
+Tsquid:S11975"8Move the array designator from the variable to the type.(äÏÔÎùÿÿÿÿ
+Tsquid:S1197R"8Move the array designator from the variable to the type.(äÏÔÎùÿÿÿÿ
+Usquid:S1197ˆ"8Move the array designator from the variable to the type.(øàü÷þÿÿÿÿ
+lsquid:S3008"VRename this field "base64_code" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Ö²Â}

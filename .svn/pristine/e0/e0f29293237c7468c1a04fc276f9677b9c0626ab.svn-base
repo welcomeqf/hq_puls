@@ -1,0 +1,55 @@
+package com.gpdi.hqplus.article.entity.vo;
+
+import lombok.Data;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * @Author: hmx
+ * @CreateDate: 2019/07/03 12:17
+ */
+@Data
+public class BannerVO {
+	private Long id;
+	/**
+	 * 类型
+	 */
+	private String type;
+
+	/**
+	 * 标题
+	 */
+	private String title;
+
+	/**
+	 * 内容
+	 */
+	private String context;
+
+	/**
+	 * 地址
+	 */
+	private String address;
+
+	/**
+	 * 链接
+	 */
+	private String linkUrl;
+	/**
+	 * 描述
+	 */
+	private String description;
+
+	/**
+	 * 图片
+	 */
+	private String[] fileNames;
+
+	/*
+	 * 发布时间
+	 * */
+
+	private LocalDateTime createTime;
+
+}

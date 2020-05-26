@@ -1,0 +1,38 @@
+package com.gpdi.hqplus.water.service;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.gpdi.hqplus.resources.entity.PropertyApply;
+import com.gpdi.hqplus.water.entity.query.PropertyApplyQuery;
+import com.gpdi.hqplus.water.entity.query.PropertyAuditQuery;
+import com.gpdi.hqplus.water.entity.vo.PropertyApplyVO;
+
+
+/**
+ * <p>
+ * 物业申请表 服务类
+ * </p>
+ *
+ * @author liuJiaHui
+ * @since 2019-07-17
+ */
+public interface IWaterApplyService extends IService<PropertyApply> {
+
+    /**
+     * <p>
+     * 分页获取水电开通申请记录
+     * </p>
+     * @param query
+     * @return
+     */
+    Page<PropertyApplyVO> getPage(PropertyApplyQuery query);
+
+    /**
+     * <p>
+     * 水电开通确认
+     * </p>
+     *  @param query
+     *
+     */
+    void insertResult(PropertyAuditQuery query);
+}

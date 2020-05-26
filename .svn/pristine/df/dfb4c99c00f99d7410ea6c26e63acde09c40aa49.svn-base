@@ -1,0 +1,287 @@
+package com.gpdi.hqplus.pass.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+
+import com.gpdi.hqplus.common.constants.*;
+import com.gpdi.hqplus.common.entity.ProcessCallbackBO;
+import com.gpdi.hqplus.common.entity.UserContext;
+import com.gpdi.hqplus.common.manager.MQService;
+import com.gpdi.hqplus.common.manager.RedisService;
+import com.gpdi.hqplus.common.util.QRCodeUtil;
+import com.gpdi.hqplus.common.util.StringUtil;
+import com.gpdi.hqplus.pass.constans.ProductPassAddressType;
+import com.gpdi.hqplus.pass.constans.ProductPassConfig;
+import com.gpdi.hqplus.pass.constans.ProductPassEnum;
+import com.gpdi.hqplus.pass.entity.ProductPass;
+import com.gpdi.hqplus.pass.mapper.ProductPassMapper;
+import com.gpdi.hqplus.pass.query.ProductPassQuery;
+import com.gpdi.hqplus.pass.service.IProductPassService;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.gpdi.hqplus.pass.util.ProductPassEnumUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+
+
+/**
+ * <p>
+ * 服务实现类
+ * </p>
+ *
+ * @author zake
+ * @since 2019-07-05
+ */
+@Slf4j
+@Service
+@Transactional(rollbackFor = Exception.class)
+public class ProductPassServiceImpl extends ServiceImpl<ProductPassMapper, ProductPass> implements IProductPassService {
+
+    @Autowired
+    private MQService mqService;
+
+    @Autowired
+    private RedisService redisService;
+
+    @Override
+    public void submit(ProductPass pass) {
+        baseMapper.insert(pass);
+//        //启动流程
+//        ProcessStartBO bo = new ProcessStartBO();
+//        bo.setBusinessKey(pass.getId());
+//        bo.setUserRedisKey(UserContext.get().getRedisKey());
+//        bo.setCallbackQueueName(ProductPassRabbitMqQueue.PROCESS_START_PASS_REVIEW);
+//        bo.setDefinitionKey(ProcessDefinitionEnum.PRODUCT_PASS_REVIEW.getKey());
+//        bo.setName("物品放行");
+//        String addressType = pass.getAddressType();
+//        bo.setTaskType(pass.getAddressType());
+//        bo.setSecurityContext(SecurityContextHolder.getContext());
+//        bo.setProjectCode(UserContext.get().getProjectCode());
+//        boolean sendObject = false;
+//        if (ProductPassAddressType.PRODUCT_PASS_ADDRESS_APARTMENT.equals(addressType)) {
+//            bo.setBusinessCode(BusinessCode.PROPERTY_PASS);
+//            //公寓流程
+//            sendObject = mqService.sendObject(RabbitMqQueue.PROCESS_START, bo);
+//        } else if (ProductPassAddressType.PRODUCT_PASS_ADDRESS_OFFICE.equals(addressType)) {
+//            bo.setBusinessCode(BusinessCode.PROPERTY_PASS_OFFICE);
+//            //办公室流程
+//            sendObject = mqService.sendObject(RabbitMqQueue.PROCESS_START_ADDRESS, bo);
+//        }
+//        if (!sendObject) {
+//            log.error("send property maintenance apply 2 mq fail.");
+//            throw new ApplicationException(ErrorCode.SERVICE_ERROR, "物品放行提交申请失败，请稍后再试");
+//        }
+    }
+
+    @Override
+    public Page list(Page page) {
+        Long userID = UserContext.get().getId();
+
+        baseMapper.selectPage(page, new QueryWrapper<ProductPass>()
+                .lambda()
+                .eq(ProductPass::getUserId, userID)
+                .orderByDesc(ProductPass::getCreateTime));
+
+        return page;
+    }
+
+
+    @Override
+    public Page listAll(ProductPassQuery query) {
+
+        Page<ProductPass> page = new Page<>();
+        page.setCurrent(query.getCurrent());
+        page.setSize(query.getSize());
+
+        LambdaQueryWrapper<ProductPass> queryWrapper = new QueryWrapper<ProductPass>().lambda()
+                .orderByDesc(ProductPass::getId);
+
+        // 高级条件查询
+        if (StringUtil.isNotBlank(query.getAddress())) {
+            queryWrapper.like(ProductPass::getAddress, query.getAddress());
+        }
+        if (StringUtil.isNotBlank(query.getPolicemenName())) {
+            queryWrapper.eq(ProductPass::getPolicemenName, query.getPolicemenName());
+        }
+        if (StringUtil.isNotBlank(query.getPolicemenType())) {
+            queryWrapper.like(ProductPass::getPolicemenType, query.getPolicemenType());
+        }
+        if (StringUtil.isNotBlank(query.getStatus())) {
+            queryWrapper.eq(ProductPass::getStatus, query.getStatus());
+        }
+
+        if (query.getPassDateStart() != null) {
+            queryWrapper.ge(ProductPass::getPassDate, query.getPassDateStart());
+        }
+        if (query.getPassDateEnd() != null) {
+            queryWrapper.le(ProductPass::getPassDate, query.getPassDateEnd());
+        }
+        if (query.getAuditTimeStart() != null) {
+            queryWrapper.ge(ProductPass::getAuditTime, query.getAuditTimeStart());
+        }
+
+        if (query.getAuditTimeEnd() != null) {
+            queryWrapper.le(ProductPass::getAuditTime, query.getAuditTimeEnd());
+        }
+
+        if (query.getFinishTimeStart() != null) {
+            queryWrapper.ge(ProductPass::getFinishTime, query.getFinishTimeStart());
+        }
+
+        if (query.getFinishTimeEnd() != null) {
+            queryWrapper.le(ProductPass::getFinishTime, query.getFinishTimeEnd());
+        }
+
+        baseMapper.selectPage(page, queryWrapper);
+
+        return page;
+    }
+
+
+    @Override
+    public void update(ProcessCallbackBO callbackBO) throws Exception {
+        Long businessKey = callbackBO.getBusinessKey();
+        String redisKey = RedisConstants.FILE + businessKey;
+        ProductPass productPass = baseMapper.selectById(businessKey);
+        if (productPass == null) {
+            return;
+        }
+        //status=======processPointCode
+        String processPointCode = callbackBO.getProcessPointCode();
+        if (StringUtil.isNotBlank(processPointCode)) {
+            ProductPassEnum passEnum = ProductPassEnumUtil.getByStatus(processPointCode);
+            if (passEnum == null) {
+                return;
+            }
+            String status = passEnum.getStatus();
+            if (status.equals(ProductPassEnum.ADDRESS_OFFICE_SUPERVISOR) ||
+                    status.equals(ProductPassEnum.ADDRESS_APARTMENT_HOUSEKEEPER)) {
+                //状态为客服主管审批完成和管家审批完成 生成二维码
+                byte[] bytes = QRCodeUtil.createZxing(businessKey.toString());
+                redisService.set(redisKey, bytes);
+                productPass.setCodeSrc(redisKey);
+            }
+            productPass.setStatus(status);
+        }
+
+        String taskId = callbackBO.getTaskId();
+        if (StringUtil.isNotBlank(taskId)) {
+            productPass.setTaskId(taskId);
+        }
+
+        boolean update = productPass.updateById();
+        if (!update) {
+            log.error("update ProductPass fail");
+        }
+    }
+
+    @Override
+    public void handUpdate(String id) throws Exception {
+        ProductPass productPass = baseMapper.selectById(id);
+        String redisKey = RedisConstants.FILE + id;
+        String addressType = productPass.getAddressType();
+        if (productPass == null) {
+            return;
+        }
+        String status = productPass.getStatus();
+        if (StringUtil.isBlank(addressType)) {
+            throw new RuntimeException("状态不能为空");
+        }
+        if (StringUtil.isBlank(addressType)) {
+            throw new RuntimeException("地址类型不能为空");
+        }
+        if (addressType.equals(ProductPassAddressType.PRODUCT_PASS_ADDRESS_APARTMENT)) {
+            //是公寓类型的流程审批
+            switch (status) {
+                case ProductPassConfig.STATUS_REVIEW:
+                    //管家审批通过(生成二维码)
+                    productPass.setStatus(ProductPassConfig.ADDRESS_APARTMENT_HOUSEKEEPER);
+                    byte[] bytes = QRCodeUtil.createZxing(id);
+                    redisService.set(redisKey, bytes);
+                    productPass.setCodeSrc(redisKey);
+                    productPass.setAuditTime(LocalDateTime.now());
+                    productPass.setUpdateTime(LocalDateTime.now());
+                    break;
+                case ProductPassConfig.ADDRESS_APARTMENT_HOUSEKEEPER:
+                    //保安同意放行
+                    productPass.setStatus(ProductPassConfig.STATUS_POLICEMEN);
+                    String userName = UserContext.get().getUserName();
+                    productPass.setPolicemenName(userName);
+                    productPass.setFinishTime(LocalDateTime.now());
+                    productPass.setUpdateTime(LocalDateTime.now());
+                    break;
+                default:
+                    break;
+            }
+        } else if (addressType.equals(ProductPassAddressType.PRODUCT_PASS_ADDRESS_OFFICE)) {
+            //写字楼流程审批
+            switch (status) {
+                case ProductPassConfig.STATUS_REVIEW:
+                    //客服审批通过
+                    productPass.setStatus(ProductPassConfig.ADDRESS_OFFICE_CUSTOMER);
+                    productPass.setUpdateTime(LocalDateTime.now());
+                    break;
+                case ProductPassConfig.ADDRESS_OFFICE_CUSTOMER:
+                    //客服主管审批通过 生成二维码
+                    productPass.setStatus(ProductPassConfig.ADDRESS_OFFICE_SUPERVISOR);
+                    byte[] bytes = QRCodeUtil.createZxing(id);
+                    redisService.set(redisKey, bytes);
+                    productPass.setCodeSrc(redisKey);
+                    productPass.setAuditTime(LocalDateTime.now());
+                    productPass.setUpdateTime(LocalDateTime.now());
+                    break;
+                case ProductPassConfig.STATUS_POLICEMEN:
+                    //保安同意放行
+                    productPass.setStatus(ProductPassConfig.STATUS_POLICEMEN);
+                    productPass.setFinishTime(LocalDateTime.now());
+                    productPass.setUpdateTime(LocalDateTime.now());
+                    break;
+                default:
+                    break;
+            }
+        }
+        boolean update = productPass.updateById();
+        if (!update) {
+            log.error("update ProductPass fail");
+        }
+    }
+
+    @Override
+    public void handFail(String id) throws Exception {
+        ProductPass productPass = baseMapper.selectById(id);
+        productPass.setStatus(ProductPassConfig.STATUS_FAIL);
+        productPass.setAuditTime(LocalDateTime.now());
+        productPass.setUpdateTime(LocalDateTime.now());
+        boolean update = productPass.updateById();
+        if (!update) {
+            log.error("update ProductPass fail");
+        }
+    }
+
+    @Override
+    public void deleteSubmit(String id) {
+        ProductPass productPass = baseMapper.selectById(id);
+        productPass.setStatus(ProductPassConfig.STATUS_CANCEL);
+        productPass.setUpdateTime(LocalDateTime.now());
+        boolean update = productPass.updateById();
+        if (!update) {
+            log.error("update ProductPass fail");
+        }
+    }
+
+    @Override
+    public void changeStatus() {
+        baseMapper.changeStatus();
+    }
+
+
+    private String getYesterdayByFormat(String timeFormat) {
+        return LocalDateTime.now().plusDays(1).format(DateTimeFormatter.ofPattern(timeFormat));
+    }
+}

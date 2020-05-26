@@ -1,0 +1,20 @@
+package com.gpdi.hqplus.resources.service;
+
+import com.gpdi.hqplus.resources.entity.TimeResourceRel;
+import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+/**
+ * <p>
+ * 
+商品资源 服务类
+ * </p>
+ *
+ * @author lianghb
+ * @since 2019-07-02
+ */
+public interface ITimeResourceRelService extends IService<TimeResourceRel> {
+    int[] getByResIdDate(Long id, LocalDate date);
+}

@@ -1,0 +1,27 @@
+package com.gpdi.hqplus.builder.service;
+
+import com.gpdi.hqplus.builder.eneiry.Build;
+
+import java.util.List;
+
+/**
+ * 物业楼栋的接口
+ * @Author qf
+ * @Date 2019/7/18
+ * @Version 1.0
+ */
+public interface IBuildService {
+
+    /**
+     * 查询该楼栋下所有楼层和门牌号
+     * @param id
+     * @return
+     */
+    List<Build> queryBuildById(Long id);
+
+    /**
+     * 查询所有楼栋
+     * @return
+     */
+    List<Build> queryBuildName();
+}

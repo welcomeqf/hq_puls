@@ -1,0 +1,59 @@
+package com.gpdi.hqplus.property.config;
+
+import com.gpdi.hqplus.common.constants.RabbitMqQueue;
+import com.gpdi.hqplus.property.constants.PropertyRabbitMqQueue;
+import org.springframework.amqp.core.Queue;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+/**
+ * @author: lianghb
+ * @create: 2019-07-04 14:12
+ **/
+@Configuration
+public class PropertyRabbitMqConfig {
+
+    /**
+     * RabbitMQ:物业报修回调
+     *
+     * @return
+     */
+    @Bean
+    public Queue propertyMaintainCallback() {
+        return new Queue(PropertyRabbitMqQueue.QUEUE_PROPERTY_MAINTAIN_BUSINESS);
+    }
+
+
+    /**
+     * RabbitMQ:物业报修回调
+     *
+     * @return
+     */
+    @Bean
+    public Queue propertyMaintainApply() {
+        return new Queue(RabbitMqQueue.PROPERTY_MAINTAIN_AUDIT);
+    }
+
+    /**
+     * RabbitMQ:维修师傅提交
+     *
+     * @return
+     */
+    @Bean
+    public Queue propertyMaintainSuccess() {
+        return new Queue(RabbitMqQueue.PROPERTY_MAINTAIN_SUCCESS);
+    }
+
+
+
+    /**
+     * RabbitMQ:物业报修回调
+     *
+     * @return
+     */
+    @Bean
+    public Queue propertyMaintainFail() {
+        return new Queue(RabbitMqQueue.PROPERTY_MAINTAIN_FAIL);
+    }
+
+}

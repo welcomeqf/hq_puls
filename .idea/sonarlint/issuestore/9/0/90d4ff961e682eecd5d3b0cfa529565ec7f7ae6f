@@ -1,0 +1,7 @@
+
+[squid:UselessImportCheck"0Remove this unused import 'java.util.ArrayList'.(÷‰îƒ8“®ëÀ-
+zsquid:S1488R"]Immediately return this expression instead of assigning it to the temporary variable "apply".(Ñ¶ˆ%8íïûï¿-
+\squid:S1155O">Use isEmpty() to check whether the collection is empty or not.(¯ğìÌ8“®ëÀ-
+squid:S1488j"aImmediately return this expression instead of assigning it to the temporary variable "queryList".(Æó‘—8àêüÃÁ-
+squid:S1488^"aImmediately return this expression instead of assigning it to the temporary variable "queryList".(¼êàè8ÏßÂÇÀ-
+squid:S14887"^Immediately return this expression instead of assigning it to the temporary variable "result".(‹Ú†ªşÿÿÿÿ8¬ ßñÀ-

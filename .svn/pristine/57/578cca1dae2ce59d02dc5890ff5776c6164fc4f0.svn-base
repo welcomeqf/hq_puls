@@ -1,0 +1,15 @@
+package com.gpdi.hqplus.apartment.entity.query;
+
+import com.gpdi.hqplus.apartment.entity.params.ApartmentParams;
+import lombok.Data;
+
+/**
+ * @Description 公寓查询参数
+ * @Author wzr
+ * @CreateDate 2019-07-17
+ * @Time 09:50
+ */
+@Data
+public class ApartmentQuery extends ApartmentParams {
+
+}

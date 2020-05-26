@@ -1,0 +1,33 @@
+package com.gpdi.hqplus.build.service;
+
+import com.gpdi.hqplus.build.entity.query.BuildQuery;
+import com.gpdi.hqplus.build.entity.vo.BuildVO;
+
+/**
+ * 用户端物业楼栋接口
+ * @Author qf
+ * @Date 2019/7/18
+ * @Version 1.0
+ */
+public interface IBuildAdminService {
+
+    /**
+     * 增加楼栋
+     * @param buildVO
+     */
+    void insertBuild(BuildVO buildVO);
+
+    /**
+     * 删除楼栋
+     * @param id
+     */
+    void deleteBuild(Long id);
+
+    /**
+     * 修改楼栋
+     * @param buildVO
+     */
+    void updateBuild(BuildVO buildVO);
+
+
+}

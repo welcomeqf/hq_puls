@@ -1,0 +1,24 @@
+package com.gpdi.hqplus.pass.query;
+
+import com.gpdi.hqplus.common.entity.BasePageQuery;
+import lombok.Data;
+
+import java.time.LocalDateTime;
+
+/**
+ * @author: lianghb
+ * @create: 2019-07-01 22:31
+ **/
+@Data
+public class ProductPassQuery extends BasePageQuery {
+    private String policemenName;
+    private String address;
+    private String policemenType;
+    private String status;
+    private LocalDateTime passDateStart;
+    private LocalDateTime passDateEnd;
+    private LocalDateTime finishTimeStart;
+    private LocalDateTime finishTimeEnd;
+    private LocalDateTime auditTimeStart;
+    private LocalDateTime auditTimeEnd;
+}

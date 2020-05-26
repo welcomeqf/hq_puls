@@ -1,0 +1,107 @@
+package com.gpdi.hqplus.user.controller.web;
+
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gpdi.hqplus.common.validate.PageQueryValidate;
+import com.gpdi.hqplus.user.entity.User;
+import com.gpdi.hqplus.user.entity.query.RegisterQuery;
+import com.gpdi.hqplus.user.entity.query.UserListQuery;
+import com.gpdi.hqplus.user.entity.vo.UserListVO;
+import com.gpdi.hqplus.user.service.IUserService;
+import com.gpdi.hqplus.user.validate.UserValidate;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+
+/**
+ * @author: lianghb
+ * @create: 2019-07-01 16:45
+ **/
+@Api
+@Slf4j
+@RestController
+@RequestMapping("/v1/manager/user")
+@PreAuthorize("hasRole('admin')")
+public class UserManagerController {
+
+    @Autowired
+    private IUserService userService;
+
+    /**
+     * 分页获取用户列表
+     *
+     * @param query
+     */
+    @ApiOperation(value = "分页获取用户列表", notes = "个体用户")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "current", value = "当前页", required = true, dataType = "int", paramType = "path"),
+            @ApiImplicitParam(name = "size", value = "每页记录数", required = true, dataType = "int", paramType = "path"),
+            @ApiImplicitParam(name = "params.phone", value = "电话", required = true, dataType = "string", paramType = "path")
+    })
+    @GetMapping("/listNormal")
+    public Page<UserListVO> listNormal(@RequestBody UserListQuery query) {
+        PageQueryValidate.check(query);
+        query.getParams().setUserType(User.USER_TYPE_NORMAL);
+        return userService.listUser(query);
+    }
+
+    /**
+     * 分页获取用户列表
+     *
+     * @param query
+     */
+    @ApiOperation(value = "分页获取用户列表", notes = "业务用户")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "current", value = "当前页", required = true, dataType = "int", paramType = "path"),
+            @ApiImplicitParam(name = "size", value = "每页记录数", required = true, dataType = "int", paramType = "path"),
+            @ApiImplicitParam(name = "params.phone", value = "电话", required = true, dataType = "string", paramType = "path")
+    })
+    @GetMapping("/listBusiness")
+    public Page<UserListVO> listBusiness(@RequestBody UserListQuery query) {
+        PageQueryValidate.check(query);
+        query.getParams().setUserType(User.USER_TYPE_BUSINESS);
+        return userService.listUser(query);
+    }
+
+    /**
+     * 新增业务用户
+     *
+     * @param query
+     */
+    @ApiOperation(value = "新增业务用户", notes = "新增业务用户")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "phone", value = "电话", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "password", value = "密码", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "userName", value = "名称", required = true, dataType = "string", paramType = "path")
+    })
+    @PostMapping("/business")
+    public String addBusinessUser(@RequestBody RegisterQuery query) {
+        UserValidate.checkAdd(query);
+        userService.addBusinessUser(query);
+
+        return "ok";
+    }
+
+    /**
+     * 修改用户信息
+     *
+     * @param query
+     */
+    @ApiOperation(value = "修改用户信息", notes = "修改用户信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "phone", value = "电话", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "password", value = "密码", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "userName", value = "名称", required = true, dataType = "string", paramType = "path")
+    })
+    @PutMapping("/business")
+    public String updateBusinessUser(@RequestBody RegisterQuery query) {
+        userService.updateUser(query);
+        return "ok";
+    }
+}

@@ -1,0 +1,112 @@
+package com.gpdi.hqplus.apartment.controller.manager;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gpdi.hqplus.apartment.entity.params.RoomParams;
+import com.gpdi.hqplus.apartment.service.RoomService;
+import com.gpdi.hqplus.common.constants.ErrorCode;
+import com.gpdi.hqplus.common.exception.ApplicationException;
+import com.gpdi.hqplus.common.util.CollectionUtil;
+import com.gpdi.hqplus.resources.constants.EquipmentCode;
+import com.gpdi.hqplus.resources.entity.PropertyEquipment;
+import com.gpdi.hqplus.resources.service.IPropertyEquipmentService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * @Description 房型管理
+ * @Author wzr
+ * @CreateDate 2019-07-08
+ * @Time 09:17
+ */
+@Api(tags = "公寓房型管理web接口")
+@Slf4j
+@RestController
+@RequestMapping("/v1/manager/resources/room")
+public class RoomManagerController {
+
+    @Autowired
+    RoomService roomService;
+
+    @Autowired
+    IPropertyEquipmentService equipmentService;
+
+    @ApiOperation(value = "添加房型")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "name", value = "房型名称", required = true, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "description", value = "房型简介", required = false, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "minPrice", value = "房型最低价格", required = true, dataType = "decimal", paramType = "path"),
+            @ApiImplicitParam(name = "maxPrice", value = "房型最高价格", required = true, dataType = "decimal", paramType = "path"),
+            @ApiImplicitParam(name = "priceType", value = "价格单位", required = true, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "pictures", value = "房型图片列表", required = true, dataType = "list", paramType = "path"),
+            @ApiImplicitParam(name = "size", value = "房型面积", required = false, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "model", value = "房型户型", required = false, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "modelLinkUrl", value = "房型户型图片", required = false, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "toward", value = "房型朝向", required = false, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "rentStatus", value = "房型租赁状态", required = false, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "window", value = "房型窗户类型", required = false, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "rentTime", value = "房型租赁时间", required = false, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "equipmentIds", value = "房型设备", required = true, dataType = "list", paramType = "path")
+    })
+    @PostMapping("/add")
+    public void add(@RequestBody RoomParams roomParams){
+        roomService.addRoom(roomParams);
+    }
+
+    @ApiOperation(value = "编辑房型，需要房型id")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "房型id", required = true, dataType = "long", paramType = "path"),
+            @ApiImplicitParam(name = "name", value = "房型名称", required = true, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "description", value = "房型简介", required = false, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "minPrice", value = "房型最低价格", required = true, dataType = "decimal", paramType = "path"),
+            @ApiImplicitParam(name = "maxPrice", value = "房型最高价格", required = true, dataType = "decimal", paramType = "path"),
+            @ApiImplicitParam(name = "priceType", value = "价格单位", required = true, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "pictures", value = "房型图片列表", required = true, dataType = "list", paramType = "path"),
+            @ApiImplicitParam(name = "size", value = "房型面积", required = false, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "model", value = "房型户型", required = false, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "modelLinkUrl", value = "房型户型图片", required = false, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "toward", value = "房型朝向", required = false, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "rentStatus", value = "房型租赁状态", required = false, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "window", value = "房型窗户类型", required = false, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "rentTime", value = "房型租赁时间", required = false, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "equipmentIds", value = "房型设备", required = true, dataType = "list", paramType = "path")
+    })
+    @PostMapping("/edit")
+    public void edit(@RequestBody RoomParams roomParams){
+        roomService.editRoom(roomParams);
+    }
+
+    @ApiOperation(value = "删除房型")
+    @ApiImplicitParam(name = "ids",value = "房型id集合",required = true,dataType = "List<Long>",paramType = "path")
+    @PostMapping("/delete")
+    public void delete(@RequestBody RoomParams roomParams){
+        List<Long> ids = roomParams.getIds();
+        if (CollectionUtil.isEmpty(ids)){
+            log.error("房型删除失败，未找到id");
+            throw new ApplicationException(ErrorCode.PARAMETER_ERROR,"房型删除失败，请检查参数");
+        }
+        roomService.deleteRoomByIds(ids);
+    }
+
+    @ApiOperation(value = "查询所有房型")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "size", value = "每页显示数", required = true, dataType = "long", paramType = "path"),
+            @ApiImplicitParam(name = "current", value = "当前页", required = true, dataType = "long", paramType = "path")
+    })
+    @PostMapping("/listByPage")
+    public Page listByPage(@RequestBody Page page){
+        return roomService.listByPage(page);
+    }
+
+    @ApiOperation(value = "查询房型所有设备列表")
+    @PostMapping("/listRoomEquip")
+    public List<PropertyEquipment> listRoomEquip(){
+        return equipmentService.listByCode(EquipmentCode.ROOM_EQUIP);
+    }
+}

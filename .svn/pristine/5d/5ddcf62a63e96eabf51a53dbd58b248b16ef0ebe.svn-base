@@ -1,0 +1,140 @@
+package com.gpdi.hqplus.base.config;
+
+import com.gpdi.hqplus.common.constants.RabbitMqQueue;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+
+/**
+ * @author: zake
+ * @Description:
+ * @Date: Created in 01:24 2019-07-05
+ **/
+@Slf4j
+@Configuration
+public class RabbitNoPersistenceConfig {
+
+
+    /**
+     * 创建交换机实例(扇形交换机)
+     * @return
+     */
+    @Bean
+    public FanoutExchange fanoutExchange() {
+
+        return new FanoutExchange(RabbitMqQueue.PROCESS_FANOUT_EXCHANGE);
+    }
+
+
+    /**
+     * 创建交换机实例(订阅)
+     * @return
+     */
+    @Bean
+    public TopicExchange topicExchangeNoPersistence() {
+
+        return new TopicExchange(RabbitMqQueue.PROCESS_TOPIC_EXCHANGE_NO_PERSISTENCE);
+    }
+
+
+    //==================创建队列======================
+
+    /**
+     * AnonymousQueue 类型的队列,是非持久的,会自动删除的队列
+     *
+     * @return
+     */
+    @Bean
+    public Queue autoDeleteQueOne() {
+
+        return new AnonymousQueue();
+    }
+
+    /**
+     * AnonymousQueue 类型的队列,是非持久的,会自动删除的队列
+     *
+     * @return
+     */
+    @Bean
+    public Queue autoDeleteQueTWO() {
+
+        return new AnonymousQueue();
+    }
+
+
+    /**
+     * RabbitMQ:流程启动(交换机)
+     *
+     * @return
+     */
+    @Bean
+    public Queue processStartExchange() {
+
+        return new Queue(RabbitMqQueue.PROCESS_START_EXCHANGE);
+    }
+
+    /**
+     * RabbitMQ:流程启动(交换机)
+     *
+     * @return
+     */
+    @Bean
+    public Queue processCallbackExchange() {
+
+        return new Queue(RabbitMqQueue.PROCESS_CALLBACK_EXCHANGE);
+    }
+
+
+
+    //    =====================绑定队列到交换机===========================
+
+
+    /**
+     *    星号匹配一个单词，哈希号匹配多个单词
+     *    代表autoDeleteQueOne这个队列和"*.orange.*"  "*.*.rabbit" 绑定了
+     */
+    @Bean
+    public Binding binding3a(TopicExchange topic,Queue autoDeleteQueOne){
+        log.info("绑定队列*.orange.* 到交换机");
+        return BindingBuilder.bind(autoDeleteQueOne).to(topic).with("*.orange.*");
+    }
+
+    @Bean
+    public Binding binding3b(TopicExchange topic,Queue autoDeleteQueOne){
+        log.info("绑定队列*.*.rabbit 到交换机");
+
+        return BindingBuilder.bind(autoDeleteQueOne).to(topic).with("*.*.rabbit");
+    }
+
+    @Bean
+    public Binding binding4a(TopicExchange topic,Queue autoDeleteQueTWO){
+        log.info("绑定队列lazy.# 到交换机");
+
+        return BindingBuilder.bind(autoDeleteQueTWO).to(topic).with("lazy.#");
+    }
+
+
+
+    /**
+     * 绑定队列到交换机
+     * @return
+     */
+    @Bean
+    public Binding bingStartToExchange() {
+
+        return BindingBuilder.bind(processCallbackExchange()).to(fanoutExchange());
+    }
+
+    /**
+     * 绑定队列到交换机
+     * @return
+     */
+    @Bean
+    public Binding bingCallbackToExchange() {
+
+        return BindingBuilder.bind(processStartExchange()).to(fanoutExchange());
+    }
+
+}

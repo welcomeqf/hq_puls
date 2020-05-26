@@ -1,0 +1,6 @@
+
+8squid:S3878ª"Remove this array creation.(ÈŸıÓûÿÿÿÿ
+Bsquid:S00108·")Either remove or fill this block of code.(”ı¾
+squid:S1319("tThe type of the "params" object should be an interface such as "Map" rather than the implementation "LinkedHashMap".(ñãúøÿÿÿÿ
+Ysquid:S3878©"ADisambiguate this call by either casting as "Class" or "Class[]".(ôí—Û
+@squid:S1148ñ"#Use a logger to log this exception.(€ÉÔ…ıÿÿÿÿ

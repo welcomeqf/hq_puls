@@ -1,0 +1,241 @@
+package com.gpdi.hqplus.enterprise.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.stuxuhai.jpinyin.PinyinException;
+import com.github.stuxuhai.jpinyin.PinyinHelper;
+import com.gpdi.hqplus.common.constants.ErrorCode;
+import com.gpdi.hqplus.common.exception.ApplicationException;
+import com.gpdi.hqplus.common.util.*;
+import com.gpdi.hqplus.enterprise.entity.Enterprise;
+import com.gpdi.hqplus.enterprise.entity.EnterpriseQuery;
+import com.gpdi.hqplus.enterprise.mapper.EnterpriseMapper;
+import com.gpdi.hqplus.enterprise.service.IEnterpriseService;
+import com.gpdi.hqplus.resources.constants.ResourceType;
+import com.gpdi.hqplus.resources.validate.CheckEmptyUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.servlet.http.HttpServletResponse;
+import java.util.LinkedHashMap;
+import java.util.List;
+
+/**
+ * <p>
+ * 企业信息表 服务实现类
+ * </p>
+ *
+ * @author wzr
+ * @since 2019-07-13
+ */
+@Slf4j
+@Service
+@Transactional(rollbackFor = Exception.class)
+public class EnterpriseServiceImpl extends ServiceImpl<EnterpriseMapper, Enterprise> implements IEnterpriseService {
+
+    @Autowired
+    IdGenerator idGenerator;
+
+    @Autowired
+    ExcelUtil<Enterprise> excelUtil;
+
+    /**
+     * 返回所有企业列表，不分页
+     *
+     * @return
+     */
+    @Override
+    public List<Enterprise> listAll() {
+        List<Enterprise> enterprises = baseMapper.selectList(new QueryWrapper<Enterprise>()
+                .lambda()
+                .eq(Enterprise::getStatus, Enterprise.STATUS_NORMAL)
+                .eq(Enterprise::getType, ResourceType.ENTERPRISE)
+                .orderByAsc(Enterprise::getCode)
+        );
+        return enterprises;
+    }
+
+    /**
+     * 添加企业
+     * @param enterprise
+     */
+    @Override
+    public void add(Enterprise enterprise) {
+        //check params
+        String[] params = {"name",
+                "industry",
+                "managerName",
+                "tel",
+                "floor",
+                "unitCode",
+                "houseKeeper"};
+        CheckEmptyUtil.check(JsonUtil.bean2Map(enterprise),params);
+
+        enterprise.setId(idGenerator.getNumberId());
+        enterprise.setType(ResourceType.ENTERPRISE);
+        enterprise.setStatus(Enterprise.STATUS_NORMAL);
+        //将企业名转为拼音首字母组合
+        try {
+            enterprise.setCode(PinyinHelper.getShortPinyin(enterprise.getName()));
+        } catch (PinyinException e) {
+            log.error("企业名称转code出错");
+        }
+        int insert = baseMapper.insert(enterprise);
+        if (insert!=1){
+            log.error("企业添加失败");
+            throw new ApplicationException(ErrorCode.SERVICE_ERROR,"新增企业失败");
+        }
+    }
+
+    /**
+     * 编辑企业信息
+     *
+     * @param enterprise
+     */
+    @Override
+    public void edit(Enterprise enterprise) {
+        //check params
+        String[] params = {"id",
+                "name",
+                "industry",
+                "managerName",
+                "tel",
+                "floor",
+                "unitCode",
+                "houseKeeper"};
+        CheckEmptyUtil.check(JsonUtil.bean2Map(enterprise),params);
+        try {
+            enterprise.setCode(PinyinHelper.getShortPinyin(enterprise.getName()));
+        } catch (PinyinException e) {
+            log.error("企业名称转code出错");
+        }
+        baseMapper.updateById(enterprise);
+    }
+
+    /**
+     * 根据id集合批量删除企业
+     *
+     * @param ids
+     */
+    @Override
+    public void deleteList(List<Long> ids) {
+        baseMapper.deleteBatchIds(ids);
+    }
+
+    /**
+     * 分页条件查询企业
+     *
+     * @param page
+     * @return
+     */
+    @Override
+    public Page listByPage(Page page) {
+        LambdaQueryWrapper<Enterprise> queryWrapper = new QueryWrapper<Enterprise>()
+                .lambda()
+                .eq(Enterprise::getStatus, Enterprise.STATUS_NORMAL)
+                .orderByDesc(Enterprise::getCreateTime);
+
+        if (CollectionUtil.isNotEmpty(page.getRecords())) {
+            //查询条件不为空时，取出查询条件
+            Object record = page.getRecords().get(0);
+            String recordStr = JsonUtil.bean2JsonString(record);
+            EnterpriseQuery enterpriseQuery = JsonUtil.json2Bean(recordStr, EnterpriseQuery.class);
+            checkQueryParams(queryWrapper,enterpriseQuery);
+        }
+        baseMapper.selectPage(page,queryWrapper);
+        return page;
+    }
+
+    /**
+     * 根据查询条件查询所有企业
+     *
+     * @param enterpriseQuery
+     * @return
+     */
+    @Override
+    public List<Enterprise> listAllForQuery(EnterpriseQuery enterpriseQuery) {
+        LambdaQueryWrapper<Enterprise> queryWrapper = new QueryWrapper<Enterprise>()
+                .lambda()
+                .eq(Enterprise::getStatus, Enterprise.STATUS_NORMAL)
+                .orderByDesc(Enterprise::getCreateTime);
+            checkQueryParams(queryWrapper,enterpriseQuery);
+        List<Enterprise> enterprises = baseMapper.selectList(queryWrapper);
+        return enterprises;
+    }
+
+    /**
+     * 导出企业信息表
+     * @param response
+     * @param enterpriseQuery
+     */
+    @Override
+    public void exportExcel(HttpServletResponse response, EnterpriseQuery enterpriseQuery) {
+        List<Enterprise> enterprises = listAllForQuery(enterpriseQuery);
+        LinkedHashMap<String, String> map = new LinkedHashMap<>();
+        map.put("name","企业名称");
+        map.put("industry","所属行业");
+        map.put("managerName","法人名称");
+        map.put("tel","联系方式");
+        map.put("personnel","行政人员");
+        map.put("personnelTel","行政人员联系方式");
+        map.put("floor","所属楼层");
+        map.put("unitCode","所在单元");
+        map.put("houseKeeper","企业管家");
+        excelUtil.exportExcel("企业信息表",map,enterprises,response);
+    }
+
+    /**
+     * 根据查询条件构建wrapper
+     * @param queryWrapper
+     * @param enterpriseQuery
+     * @return
+     */
+    private LambdaQueryWrapper checkQueryParams(LambdaQueryWrapper<Enterprise> queryWrapper,EnterpriseQuery enterpriseQuery){
+        if (queryWrapper==null){
+            throw new ApplicationException(ErrorCode.UNKNOWN_ERROR);
+        }
+        if (enterpriseQuery==null){
+            return queryWrapper;
+        }
+        if (StringUtil.isNotBlank(enterpriseQuery.getName())) {
+            queryWrapper.like(Enterprise::getName, enterpriseQuery.getName());
+        }
+
+        if (StringUtil.isNotBlank(enterpriseQuery.getManagerName())) {
+            queryWrapper.like(Enterprise::getManagerName, enterpriseQuery.getManagerName());
+        }
+
+        if (StringUtil.isNotBlank(enterpriseQuery.getTel())) {
+            queryWrapper.like(Enterprise::getTel, enterpriseQuery.getTel());
+        }
+
+        if (StringUtil.isNotBlank(enterpriseQuery.getPersonnel())) {
+            queryWrapper.like(Enterprise::getPersonnel, enterpriseQuery.getPersonnel());
+        }
+
+        if (StringUtil.isNotBlank(enterpriseQuery.getPersonnelTel())) {
+            queryWrapper.like(Enterprise::getPersonnelTel, enterpriseQuery.getPersonnelTel());
+        }
+
+        if (StringUtil.isNotBlank(enterpriseQuery.getIndustry())) {
+            queryWrapper.eq(Enterprise::getIndustry, enterpriseQuery.getIndustry());
+        }
+
+        if (StringUtil.isNotBlank(enterpriseQuery.getHouseKeeper())) {
+            queryWrapper.like(Enterprise::getHouseKeeper, enterpriseQuery.getHouseKeeper());
+        }
+
+        if (enterpriseQuery.getCreateTimeMin() != null) {
+            queryWrapper.ge(Enterprise::getCreateTime, enterpriseQuery.getCreateTimeMin());
+        }
+
+        if (enterpriseQuery.getCreateTimeMax() != null) {
+            queryWrapper.le(Enterprise::getCreateTime, enterpriseQuery.getCreateTimeMax());
+        }
+        return queryWrapper;
+    }
+}

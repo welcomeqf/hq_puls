@@ -1,0 +1,13 @@
+package com.gpdi.hqplus.builder.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.gpdi.hqplus.builder.eneiry.Build;
+
+/**
+ * 用户端物业楼栋Mapper接口
+ * @Author qf
+ * @Date 2019/7/18
+ * @Version 1.0
+ */
+public interface BuildAdminMapper extends BaseMapper<Build> {
+}

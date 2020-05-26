@@ -1,0 +1,70 @@
+package com.gpdi.hqplus.property.controller.web;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gpdi.hqplus.common.validate.PageQueryValidate;
+import com.gpdi.hqplus.property.entity.query.PropertyMaintainListQuery;
+import com.gpdi.hqplus.property.entity.vo.PropertyMaintainListVO;
+import com.gpdi.hqplus.property.service.IPropertyService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+/**
+ * @author: lianghb
+ * @create: 2019-07-09 16:32
+ **/
+@Api
+@Slf4j
+@RestController
+@RequestMapping("/v1/manager/resources/property")
+public class PropertyMaintainManagerController {
+
+    @Autowired
+    private IPropertyService propertyService;
+
+    /**
+     * <p>
+     * 分页获取物业报修记录
+     * </p>
+     *
+     * @return
+     */
+    @ApiOperation(value = "分页获取物业报修记录", notes = "分页获取物业报修记录")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "current", value = "当前页", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "size", value = "每页记录数", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "address", value = "姓名", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "type", value = "联系方式", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "dealUserName", value = "留言", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "status", value = "文件名称列表", required = true, dataType = "string[]", paramType = "path"),
+            @ApiImplicitParam(name = "applyStartTime", value = "文件名称列表", required = true, dataType = "string[]", paramType = "path"),
+            @ApiImplicitParam(name = "applyEndTime", value = "文件名称列表", required = true, dataType = "string[]", paramType = "path"),
+            @ApiImplicitParam(name = "completeStartTime", value = "文件名称列表", required = true, dataType = "string[]", paramType = "path"),
+            @ApiImplicitParam(name = "completeEndTime", value = "文件名称列表", required = true, dataType = "string[]", paramType = "path")
+    })
+    @PostMapping("/pageAll")
+    public Page<PropertyMaintainListVO> apply(@RequestBody PropertyMaintainListQuery query) {
+        PageQueryValidate.check(query);
+        return propertyService.pageAll(query);
+    }
+
+    /**
+     * <p>
+     * 根据id获取物业报修记录
+     * </p>
+     *
+     * @return
+     */
+    @ApiOperation(value = "根据id获取物业报修记录", notes = "根据id获取物业报修记录")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "id", required = true, dataType = "string", paramType = "path")
+    })
+    @GetMapping("/byId")
+    public PropertyMaintainListVO getById(Long id) {
+        return propertyService.getListVOById(id);
+    }
+}

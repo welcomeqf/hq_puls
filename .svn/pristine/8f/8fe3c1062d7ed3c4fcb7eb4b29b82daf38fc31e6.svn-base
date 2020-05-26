@@ -1,0 +1,22 @@
+package com.gpdi.hqplus.pay.entity;
+
+import lombok.Data;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+
+/**
+ * @author: zake
+ * @Description: 微信生成预付单vo
+ * @Date: Created in 12:04 2019-07-14
+ **/
+@Data
+public class WechatPayVo implements Serializable {
+    private String orderId;
+    /**
+     * 商品描述
+     */
+    private String body;
+    private String ipAddress;
+    private BigDecimal price;
+}

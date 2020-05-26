@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gpdi.hqplus.user.mapper.UserMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.gpdi.hqplus.user.entity.User">
+        <id column="id" property="id"/>
+        <result column="account" property="account"/>
+        <result column="phone" property="phone"/>
+        <result column="email" property="email"/>
+        <result column="password" property="password"/>
+        <result column="open_id" property="openId"/>
+        <result column="session_key" property="sessionKey"/>
+        <result column="union_id" property="unionId"/>
+        <result column="user_type" property="userType"/>
+        <result column="status" property="status"/>
+        <result column="version" property="version"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="project_code" property="projectCode"/>
+    </resultMap>
+
+    <select id="listNormal" parameterType="com.gpdi.hqplus.common.util.PageUtil"
+            resultType="com.gpdi.hqplus.user.entity.vo.UserListVO">
+        SELECT tu.id,tue.user_name,tu.email,tu.phone,tu.`status`,turr.role_code,tu.create_time
+        FROM `tb_user` tu
+        LEFT JOIN tb_user_extend tue on tu.id = tue.user_id
+        LEFT JOIN tb_user_role_rel turr on tue.id = turr.user_id
+        <where>
+            <if test="@com.gpdi.hqplus.common.util.Ognl@isNotEmpty(params)">
+                <if test="@com.gpdi.hqplus.common.util.Ognl@isString(params.deptCode)">
+                    AND td.code = #{params.deptCode}
+                </if>
+                <if test="@com.gpdi.hqplus.common.util.Ognl@isString(params.userName)">
+                    AND tue.user_name LIKE "%${params.userName}%"
+                </if>
+                <if test="@com.gpdi.hqplus.common.util.Ognl@isString(params.phone)">
+                    AND tu.phone LIKE "%${params.phone}%"
+                </if>
+                <if test="@com.gpdi.hqplus.common.util.Ognl@isString(params.roleCode)">
+                    AND turr.role_code = #{params.roleCode}
+                </if>
+            </if>
+        </where>
+        ORDER BY tu.create_time
+    </select>
+
+    <select id="getUserListByRoleCode" resultType="com.gpdi.hqplus.user.entity.vo.UserExtendVO">
+        SELECT tue.user_id,tue.user_name FROM `tb_user_extend` tue
+        LEFT JOIN `tb_user_role_rel` turr ON turr.user_id = tue.user_id
+        LEFT JOIN `tb_role` tr ON tr.`code` = turr.role_code
+        <where>
+            <if test="@com.gpdi.hqplus.common.util.Ognl@isNotEmpty(value)">
+                turr.role_code = #{value}
+            </if>
+        </where>
+    </select>
+
+    <select id="listBusiness" parameterType="com.gpdi.hqplus.common.util.PageUtil"
+            resultType="com.gpdi.hqplus.user.entity.vo.UserBusinessVO">
+        SELECT tu.id,tue.user_name,tu.phone,tu.`status`,tr.`name` as roleName, td.`name` as deptName, tu.create_time
+        FROM tb_user tu
+        LEFT JOIN tb_user_extend tue on tu.id = tue.user_id
+        LEFT JOIN tb_user_role_rel turr on tue.id = turr.user_id
+        LEFT JOIN tb_role tr on tr.`code` = turr.role_code
+        LEFT JOIN tb_user_dept_rel tudr on tudr.user_id = tu.id
+        LEFT JOIN tb_dept td ON td.`code` = tudr.dept_code
+        <where>
+            <if test="@com.gpdi.hqplus.common.util.Ognl@isNotEmpty(params)">
+                <if test="@com.gpdi.hqplus.common.util.Ognl@isString(params.userType)">
+                    AND tu.user_type = #{params.userType}
+                </if>
+                <if test="@com.gpdi.hqplus.common.util.Ognl@isString(params.userName)">
+                    AND tue.user_name LIKE "%${params.userName}%"
+                </if>
+                <if test="@com.gpdi.hqplus.common.util.Ognl@isString(params.phone)">
+                    AND tu.phone LIKE "%${params.phone}%"
+                </if>
+                <if test="@com.gpdi.hqplus.common.util.Ognl@isString(params.roleCode)">
+                    AND turr.role_code = #{params.roleCode}
+                </if>
+            </if>
+        </where>
+        ORDER BY tu.create_time
+    </select>
+
+    <select id="getUserBusinessVOById" resultType="com.gpdi.hqplus.user.entity.vo.UserBusinessVO">
+        SELECT tu.id,tue.user_name,tu.phone,tu.`status`,tr.`name` as roleName, td.`name` as deptName, tu.create_time
+        FROM tb_user tu
+        LEFT JOIN tb_user_extend tue on tu.id = tue.user_id
+        LEFT JOIN tb_user_role_rel turr on tue.id = turr.user_id
+        LEFT JOIN tb_role tr on tr.`code` = turr.role_code
+        LEFT JOIN tb_user_dept_rel tudr on tudr.user_id = tu.id
+        LEFT JOIN tb_dept td ON td.`code` = tudr.dept_code
+        <where>
+            <if test="@com.gpdi.hqplus.common.util.Ognl@isLong(value)">
+                tu.id = ${value}
+            </if>
+        </where>
+        ORDER BY tu.create_time
+    </select>
+
+</mapper>

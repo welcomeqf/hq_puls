@@ -1,0 +1,105 @@
+package com.gpdi.hqplus.resources.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.gpdi.hqplus.common.constants.ErrorCode;
+import com.gpdi.hqplus.common.exception.ApplicationException;
+import com.gpdi.hqplus.common.util.CollectionUtil;
+import com.gpdi.hqplus.common.util.IdGenerator;
+import com.gpdi.hqplus.resources.entity.PropertyEquipment;
+import com.gpdi.hqplus.resources.entity.vo.EquipmentVO;
+import com.gpdi.hqplus.resources.entity.vo.SimpleEquipmentVO;
+import com.gpdi.hqplus.resources.mapper.PropertyEquipmentMapper;
+import com.gpdi.hqplus.resources.service.IPropertyEquipmentService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+/**
+ * <p>
+ * 物业设备 服务实现类
+ * </p>
+ *
+ * @author lianghb
+ * @since 2019-07-08
+ */
+@Slf4j
+@Service
+@Transactional(rollbackFor = Exception.class)
+public class PropertyEquipmentServiceImpl extends ServiceImpl<PropertyEquipmentMapper, PropertyEquipment> implements IPropertyEquipmentService {
+
+    @Autowired
+    IdGenerator idGenerator;
+
+    /**
+     * 新增设备
+     *
+     * @param equipment
+     */
+    @Override
+    public void add(PropertyEquipment equipment) {
+
+        equipment.setStatus(PropertyEquipment.STATUS_NORMAL);
+        equipment.setId(idGenerator.getNumberId());
+        int insert = baseMapper.insert(equipment);
+        if (insert != 1) {
+            log.error("设备添加失败");
+            throw new ApplicationException(ErrorCode.UNKNOWN_ERROR, "设备添加失败");
+        }
+    }
+
+    @Override
+    public List<PropertyEquipment> listByIds(Long[] ids) {
+        return baseMapper.selectList(new QueryWrapper<PropertyEquipment>()
+                .lambda()
+                .eq(PropertyEquipment::getStatus, PropertyEquipment.STATUS_NORMAL)
+                .in(PropertyEquipment::getId, ids)
+        );
+    }
+
+    /**
+     * 根据type获取设备
+     *
+     * @param code
+     * @return
+     */
+    @Override
+    public List<PropertyEquipment> listByCode(String code) {
+        List<PropertyEquipment> equipments = baseMapper.selectList(new QueryWrapper<PropertyEquipment>()
+                .lambda()
+                .eq(PropertyEquipment::getStatus, PropertyEquipment.STATUS_NORMAL)
+                .eq(PropertyEquipment::getCode, code)
+                .orderByDesc(PropertyEquipment::getCreateTime)
+        );
+        if (CollectionUtil.isEmpty(equipments)) {
+            log.warn("设备查询为空，code=" + code);
+            return CollectionUtil.createArrayList();
+        }
+        return equipments;
+    }
+
+    @Override
+    public List<EquipmentVO> listByType(String type) {
+        List<PropertyEquipment> equipments = baseMapper.selectList(new QueryWrapper<PropertyEquipment>()
+                .lambda()
+                .eq(PropertyEquipment::getStatus, PropertyEquipment.STATUS_NORMAL)
+                .eq(PropertyEquipment::getType, type)
+                .orderByDesc(PropertyEquipment::getCode)
+        );
+
+        List<EquipmentVO> result = CollectionUtil.createArrayList();
+        if (CollectionUtil.isNotEmpty(equipments)) {
+            for (PropertyEquipment equipment : equipments) {
+                EquipmentVO vo = new EquipmentVO();
+                BeanUtils.copyProperties(equipment, vo);
+                result.add(vo);
+            }
+        }
+
+        return result;
+    }
+}

@@ -1,0 +1,103 @@
+package com.gpdi.hqplus.complaint.controller.web;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gpdi.hqplus.common.constants.ErrorCode;
+import com.gpdi.hqplus.common.entity.ProcessCallbackBO;
+import com.gpdi.hqplus.common.entity.vo.JsonResultVO;
+import com.gpdi.hqplus.common.exception.ApplicationException;
+import com.gpdi.hqplus.complaint.entity.Complaint;
+import com.gpdi.hqplus.complaint.entity.query.ComplaintPageQuery;
+import com.gpdi.hqplus.complaint.entity.vo.ComplaintFeedbackVO;
+import com.gpdi.hqplus.complaint.service.IComplaintAdminService;
+import com.gpdi.hqplus.complaint.service.IComplaintService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+/**
+ * 管理端的意见反馈控制器
+ * @Author qf
+ * @Date 2019/7/15
+ * @Version 1.0
+ */
+@Api
+@Slf4j
+@RestController
+@RequestMapping("/v1/web/resources/complaintAdmin")
+public class ComplaintAdminController {
+
+    @Autowired
+    private IComplaintAdminService complaintAdminService;
+
+    @Autowired
+    private IComplaintService complaintService;
+
+    /**
+     * 管理员同意审核~分派，业务部门处理
+     * <p>修改流程的状态</p>
+     * @param id
+     * @return
+     */
+    @ApiOperation(value = "修改状态",notes = "修改状态")
+    @ApiImplicitParam(name = "id", value = "id", required = true, dataType = "string", paramType = "path")
+    @GetMapping("/update/{id}")
+    public String updateStatus(@PathVariable("id") Long id){
+        if (id == null) {
+            throw new ApplicationException(ErrorCode.SERVICE_ERROR,"接收的id不能为空");
+        }
+        //组装一个BO
+        ProcessCallbackBO bo = new ProcessCallbackBO();
+        Complaint complaint = complaintService.queryById(id);
+        bo.setProcessPointCode(complaint.getStatus());
+        bo.setBusinessKey(id);
+        Long days = complaintAdminService.updateStatus(bo);
+        if (days > 2) {
+            return "您已超时处理!";
+        }
+        return "ok";
+    }
+
+    /**
+     * 查看反馈记录
+     * @param query
+     * @return
+     */
+    @ApiOperation(value = "查看反馈记录",notes = "查看反馈记录")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "current", value = "当前页", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "size", value = "每页显示条数", required = true, dataType = "string", paramType = "path")
+    })
+    @RequestMapping("/query")
+    public Page<Complaint> queryAllHistory(@RequestBody ComplaintPageQuery query){
+        if (query.getCurrent() == null || query.getSize() == null) {
+            throw new ApplicationException(ErrorCode.SERVICE_ERROR,"接收的参数不能为空");
+        }
+        Page<Complaint> page = complaintAdminService.listPageHistory(query);
+
+        return page;
+    }
+
+    /**
+     * 取消建议以及反馈内容
+     * @param complaintFeedbackVo
+     * @return
+     */
+    @ApiOperation(value = "直接反馈",notes = "直接反馈")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "id", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "dealUserId", value = "处理人id", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "feedBack", value = "反馈内容", required = true, dataType = "string", paramType = "path")
+    })
+    @RequestMapping("/feedback")
+    public String feedback(@RequestBody ComplaintFeedbackVO complaintFeedbackVo){
+        if (complaintFeedbackVo.getId() == null || complaintFeedbackVo.getDealUserId() == null || complaintFeedbackVo.getFeedBack() == null) {
+            throw new ApplicationException(ErrorCode.SERVICE_ERROR,"接收参数不能为空");
+        }
+        complaintAdminService.feed(complaintFeedbackVo);
+        return "ok";
+    }
+}

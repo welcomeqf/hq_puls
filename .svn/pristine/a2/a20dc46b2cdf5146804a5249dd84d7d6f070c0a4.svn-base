@@ -1,0 +1,69 @@
+package com.gpdi.hqplus.meeting.entity.query;
+
+import lombok.Data;
+
+import java.math.BigDecimal;
+
+/**
+ * @author: lianghb
+ * @create: 2019-07-17 15:29
+ **/
+@Data
+public class MeetingAddQuery {
+    private Long id;
+    /**
+     * 类型
+     */
+    private String type;
+
+    /**
+     * 标题
+     */
+    private String name;
+
+    /**
+     * 描述
+     */
+    private String context;
+
+    /**
+     * 地址
+     */
+    private String address;
+
+    /**
+     * 面积
+     */
+    private BigDecimal area;
+
+    /**
+     * 楼层
+     */
+    private String floor;
+
+    private Integer size;
+
+    private Long[] equipmentList;
+
+    private Integer serviceStartTime;
+
+    private Integer serviceEndTime;
+
+
+    // ----------------------------------------------------------------------------- product
+    /**
+     * 封面图片
+     */
+    private String coverFile;
+    /**
+     * 封面图片
+     */
+    private String[] otherImg;
+    /**
+     * 增值服务
+     */
+    private Long[] extendProduct;
+
+    private BigDecimal price;
+    private String description;
+}

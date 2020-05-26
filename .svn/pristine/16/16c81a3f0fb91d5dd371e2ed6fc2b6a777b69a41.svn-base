@@ -1,0 +1,28 @@
+package com.gpdi.hqplus.apartment.service;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gpdi.hqplus.apartment.entity.vo.ApartmentBookVO;
+
+/**
+ * @Description 公寓预约看房service
+ * @Author wzr
+ * @CreateDate 2019-07-04
+ * @Time 18:20
+ */
+public interface ApartmentBookService {
+
+    /**
+     * 预约看房
+     * @param apartmentBookVO
+     */
+    void bookApartment(ApartmentBookVO apartmentBookVO);
+
+    /*以上为app端可用服务*/
+
+    /**
+     * 分页查询指定公寓的预约看房记录
+     * @param page
+     * @return
+     */
+    Page listApartmentBookByApartmentIdAndPage(Page<ApartmentBookVO> page);
+}

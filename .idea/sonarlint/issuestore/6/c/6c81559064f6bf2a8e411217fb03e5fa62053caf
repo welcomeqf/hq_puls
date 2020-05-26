@@ -1,0 +1,5 @@
+
+zsquid:UselessImportCheck"JRemove this unused import 'com.gpdi.hqplus.build.entity.query.BuildQuery'.(ùßŒÌøÿÿÿÿ8‡’ŞèÀ-
+jsquid:S1192-"GDefine a constant instead of duplicating this literal "normal" 3 times.(ï¹Ú£øÿÿÿÿ8€šóÀ-
+V
+squid:S106("9Replace this use of System.out or System.err by a logger.(‚ÎšÛ8æ›½óÀ-

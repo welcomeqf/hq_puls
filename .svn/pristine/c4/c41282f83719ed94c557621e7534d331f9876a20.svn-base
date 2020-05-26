@@ -1,0 +1,68 @@
+package com.gpdi.hqplus.meeting.entity.vo;
+
+import com.gpdi.hqplus.resources.entity.PropertyEquipment;
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+/**
+ * app 端：会议室商品列表
+ * @author: lianghb
+ * @create: 2019-07-12 21:41
+ **/
+@Data
+public class MeetingProductVO {
+    /**
+     * 会议室商品 id
+     */
+    private Long id;
+    /**
+     * 会议室资源 id
+     */
+    private Long meetingResourceId;
+    /**
+     * 价格
+     */
+    private BigDecimal price;
+    /**
+     * 价格单位
+     */
+    private String priceUnitCode;
+    /**
+     * 封面图片
+     */
+    private String coverImg;
+    /**
+     * 名称
+     */
+    private String name;
+    /**
+     * 人数
+     */
+    private Integer size;
+    /**
+     * 面积
+     */
+    private BigDecimal area;
+    /**
+     * 服务流程
+     */
+    private String serviceProcess;
+    /**
+     * 描述
+     */
+    private String description;
+    /**
+     * 详情
+     */
+    private String context;
+    /**
+     * 拥有设备
+     */
+    private List<PropertyEquipment> equipments;
+    /**
+     * 增值服务
+     */
+    private List<MeetingExtendProductVO> extendProduct;
+}

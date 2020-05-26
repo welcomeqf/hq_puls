@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gpdi.hqplus.apartment.mapper.ApartmentSeriesMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.gpdi.hqplus.apartment.entity.ApartmentSeries">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="latitude" property="latitude" />
+        <result column="longitude" property="longitude" />
+        <result column="address" property="address" />
+        <result column="equipments" property="equipments" />
+        <result column="description" property="description" />
+        <result column="user_instruction" property="userInstruction" />
+        <result column="show_images" property="showImages" />
+        <result column="status" property="status" />
+        <result column="version" property="version" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="project_code" property="projectCode" />
+    </resultMap>
+
+    <resultMap id="SeriesPriceVO" type="com.gpdi.hqplus.apartment.entity.vo.SeriesPriceVO">
+        <result column="min_price" property="minPrice" />
+        <result column="max_price" property="maxPrice" />
+    </resultMap>
+
+
+    <select id="getPriceBySeries" parameterType="long" resultMap="SeriesPriceVO">
+        select min(min_price) as min_price,
+               max(max_price) as max_price
+        from tb_apartment_room
+        where series_id = #{id}
+    </select>
+
+</mapper>

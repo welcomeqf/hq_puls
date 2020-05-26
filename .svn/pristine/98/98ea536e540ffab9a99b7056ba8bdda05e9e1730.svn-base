@@ -1,0 +1,66 @@
+package com.gpdi.hqplus.apartment.entity.vo;
+
+import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.gpdi.hqplus.resources.entity.PropertyEquipment;
+import com.gpdi.hqplus.resources.entity.PropertyResource;
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+/**
+ * @Description 公寓vo类
+ * 公寓视为建筑资源，存放于tb_property_resource内
+ * @Author wzr
+ * @CreateDate 2019-07-04
+ * @Time 09:55
+ */
+@Data
+public class ApartmentVO extends Model<PropertyResource> {
+
+    /**
+     * 公寓id
+     */
+    private Long id;
+
+    /**
+     * 公寓名称
+     */
+    private String name;
+
+    /**
+     * 资源类型,区别于其他建筑物资源
+     */
+    private String type;
+
+    /**
+     * 公寓的主体是房型集合，仅有id存入表中
+     */
+    private List<RoomVO> rooms ;
+
+    /**
+     * 公寓介绍
+     */
+    private String description;
+
+    /**
+     * 公寓图片
+     */
+    private List<String> pictures;
+
+    /**
+     * 公寓拥有设备
+     */
+    private List<PropertyEquipment> equipments;
+
+    /**
+     * 最低价格 取所拥有可租赁的房型的最低价格，也可手动设置
+     */
+    private BigDecimal minPrice;
+
+    /**
+     * 最高价格 取所拥有可租赁的房型的最高价格，也可手动设置
+     */
+    private BigDecimal maxPrice;
+
+}

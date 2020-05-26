@@ -1,0 +1,57 @@
+package com.gpdi.hqplus.meeting.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.gpdi.hqplus.common.constants.BusinessCode;
+import com.gpdi.hqplus.common.util.CollectionUtil;
+import com.gpdi.hqplus.meeting.service.IMeetingService;
+import com.gpdi.hqplus.resources.entity.ProductResource;
+import com.gpdi.hqplus.resources.entity.PropertyResource;
+import com.gpdi.hqplus.resources.entity.query.PropertyQuery;
+import com.gpdi.hqplus.resources.service.impl.PropertyResourceServiceImpl;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * @author: lianghb
+ * @create: 2019-07-12 21:39
+ **/
+@Slf4j
+@Service
+@Transactional(rollbackFor = Exception.class)
+public class MeetingServiceImpl extends PropertyResourceServiceImpl implements IMeetingService {
+
+
+    @Override
+    public void addNewMeetingProperty(PropertyQuery query) {
+        query.setBusinessCode(BusinessCode.PROPERTY_MEETING_ROOM);
+        add(query);
+    }
+
+    @Override
+    public Map<Long, PropertyResource> listByIds(Set<Long> idSet) {
+        List<PropertyResource> list = baseMapper.selectList(new QueryWrapper<PropertyResource>()
+                .lambda()
+                .eq(PropertyResource::getStatus, ProductResource.STATUS_NORMAL)
+                .in(PropertyResource::getId, idSet)
+        );
+        Map<Long, PropertyResource> map = CollectionUtil.createHashMap();
+
+        if (CollectionUtil.isNotEmpty(list)) {
+            for (PropertyResource propertyResource : list) {
+                map.put(propertyResource.getId(), propertyResource);
+            }
+        }
+
+        return map;
+    }
+
+    @Override
+    public PropertyResource getById(Long id) {
+        return baseMapper.selectById(id);
+    }
+}

@@ -1,0 +1,117 @@
+package com.gpdi.hqplus.water.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gpdi.hqplus.common.util.BeanPowerHelper;
+import com.gpdi.hqplus.common.util.CollectionUtil;
+import com.gpdi.hqplus.common.util.IdGenerator;
+import com.gpdi.hqplus.common.util.StringUtil;
+import com.gpdi.hqplus.resources.entity.PropertyApply;
+import com.gpdi.hqplus.resources.service.impl.PropertyApplyServiceImpl;
+import com.gpdi.hqplus.water.entity.query.PropertyApplyQuery;
+import com.gpdi.hqplus.water.entity.query.PropertyAuditQuery;
+import com.gpdi.hqplus.water.entity.vo.PropertyApplyVO;
+import com.gpdi.hqplus.water.service.IWaterApplyService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+/**
+ * <p>
+ * 物业申请表 服务实现类
+ * </p>
+ *
+ * @author liuJiaHui
+ * @since 2019-07-17
+ */
+@Slf4j
+@Service
+@Transactional(rollbackFor = Exception.class)
+public class WaterApplyServiceImpl extends PropertyApplyServiceImpl implements IWaterApplyService {
+
+    @Autowired
+    private IdGenerator idGenerator ;
+
+    /**
+     * <p>
+     * 分页获取水电开通申请记录
+     * </p>
+     *
+     * @return
+     */
+    @Override
+    public Page<PropertyApplyVO> getPage(PropertyApplyQuery query) {
+
+        Page<PropertyApply> propertyApplyPage = new Page<>();
+        propertyApplyPage.setCurrent(query.getCurrent());
+        propertyApplyPage.setSize(query.getSize()) ;
+
+        LambdaQueryWrapper<PropertyApply> queryWrapper = new QueryWrapper<PropertyApply>().lambda()
+                .orderByDesc(PropertyApply::getId) ;
+
+        if (StringUtil.isNotBlank(query.getUserName())) {
+            queryWrapper.like(PropertyApply::getUserName, query.getUserName()) ;
+        }
+        if (StringUtil.isNotBlank(query.getUserConnect())) {
+            queryWrapper.like(PropertyApply::getUserConnect, query.getUserConnect()) ;
+        }
+
+        baseMapper.selectPage(propertyApplyPage, queryWrapper) ;
+
+        List<PropertyApply> records = propertyApplyPage.getRecords() ;
+        List<PropertyApplyVO> result = CollectionUtil.createArrayList(records.size()) ;
+
+        for (PropertyApply record : records) {
+
+            result.add(getWaterList(record)) ;
+
+        }
+
+        return BeanPowerHelper.mapPage(propertyApplyPage, result) ;
+
+    }
+
+    /**
+     * <p>
+     * 水电开通确认
+     * </p>
+     *
+     * @return
+     */
+    @Override
+    public void insertResult(PropertyAuditQuery query) {
+
+        PropertyApply propertyApply = baseMapper.selectOne(new QueryWrapper<PropertyApply>()
+        .lambda()
+        .eq(PropertyApply::getId, query.getId())) ;
+
+        if (propertyApply == null){
+            log.error("该用户信息不存在物业申请表中");
+        }
+
+        propertyApply.setFeedback(query.getFeedback()) ;
+        propertyApply.setStatus(query.getStatus()) ;
+
+        boolean b = propertyApply.updateById();
+
+        if (!b) {
+            log.error("水电开通状态确认失败");
+        }
+
+    }
+
+    private PropertyApplyVO getWaterList(PropertyApply record) {
+
+        PropertyApplyVO vo = new PropertyApplyVO() ;
+        BeanUtils.copyProperties(record,vo);
+
+        return vo ;
+
+    }
+
+}

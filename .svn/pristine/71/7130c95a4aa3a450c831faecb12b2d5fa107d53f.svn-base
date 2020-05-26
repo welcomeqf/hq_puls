@@ -1,0 +1,29 @@
+package com.gpdi.hqplus.apartment.entity.params;
+
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+/**
+ * @Description 公寓接受参数
+ * @Author wzr
+ * @CreateDate 2019-07-08
+ * @Time 09:56
+ */
+@Data
+public class ApartmentParams {
+    private Long apartmentId;
+    private String name;
+    private String gender;
+    private String phone;
+    private Long roomId;
+    private String applyTime;
+
+    private String description;
+    private List<String> pictures;
+    private List<Long> roomIds;
+    private List<Long> equipmentIds;
+    private BigDecimal minPrice;
+    private BigDecimal maxPrice;
+}

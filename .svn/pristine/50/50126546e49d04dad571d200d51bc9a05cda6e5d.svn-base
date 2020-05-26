@@ -1,0 +1,604 @@
+# 华强 Plus-项目开发指南
+
+## 项目开发环境
+- jdk:1.8
+- maven
+- idea/eclipse
+- lombok   
+    idea安装：https://blog.csdn.net/liben0429/article/details/80278494   
+    eclipes安装：https://blog.csdn.net/icecoola_/article/details/77414572
+- svn
+
+## SVN 使用说明
+
+## 项目结构
+- common：公共模块
+- eureka：注册中心
+- gateway：api 网关
+- service-content：内容信息服务
+- service-user：用户服务
+- service-order：订单服务
+- service-pay：支付服务
+- service-appointment：预约服务
+- service-integral：积分服务
+- service-manager：后台管理服务
+
+## 包结构
+基础包名`com.gpdi.hqplus`
+
+##### 公共模块（common）
+- advice：aop 功能，如全局异常处理，全局返回信息包装，mybatis 公共字段自动填充等
+- anntation：注解
+- config：配置文件
+- entity：实体类
+- constants：常量类、枚举
+- exception：异常类
+- manager：通过层，如 redis 工具类，fastDFS 工具类，SMS 工具类等等
+- util：工具类，详情如下：
+    - ArrayUtil：数组工具类
+    - Base64Util：Base64 工具类
+    - BCryptUtil：密码加密，验证
+    - BeanPowerHelper：实体类克隆工具
+    - CollectionUtil：集合工具类
+    - DateUtil：日期格式类，涉及日期格式化请使用该工具类，统一信息格式化
+    - ExceptionUtil：异常工具类
+    - IdGenerator：id 生成器
+    - JsonUtil：json 转换工具类
+    - MD5Util：MD5 工具类
+    - StringUtil：字符串工具类
+
+##### 应用模块
+- api：api 层，用于暴露接口给其他微服务调用
+- config：配置文件
+- controller：web 层，用于暴露 rest 接口供前端系统调用
+- entity：实体类
+- feign：显示 web 调用，用于调用其他微服务接口
+- mapper：dao 接口类
+- service：业务层
+- validate：验证层，可将复杂的验证代码置于此，简化代码，提高代码可阅读性
+
+##### 微服务模块划分
+- 用户服务（user）
+    - 登录、注册
+    - 用户信息
+    - 商户信息
+    - 用户认证申请
+
+- 订单服务（order）
+    - 个人钱包
+    - 订单生成
+    - 报表
+
+- 支付服务（pay）
+    - 支付
+
+- 预约服务（appointment）
+    - 商户入驻申请
+    - 物业报修申请
+    - 物品放行申请
+    - 水电开通申请
+    - 装修申请
+    - 公寓看房预约
+    - 写字楼看房预约
+    - 商铺看房预
+
+- 信息内容服务（content）
+    - 首页
+    - banner
+    - APP 引导页
+    - 协议信息
+    - 园区服务热线
+    - 园区资讯
+    - 园区公告
+    - 园区活动
+    - 产业地图
+    - 政策信息
+    - 党建资讯
+    - 企业服务
+    - 服务产品信息
+    - 公寓租赁信息
+    - 写字楼招商信息
+    - 写字楼租赁信息
+    - 商品看房租赁信息
+    - 水电缴费信息
+    - 停车缴费信息
+    - 充电桩
+    - 投诉建
+
+- 积分系统服务（integral）
+    - 用户积分服务
+
+- 后台管理系统服务（manager）
+    - 后台管理系统
+
+## 项目配置（yml）
+```
+# remark:用户模块 author:lianghb date:2019-05-21
+server:
+  port: 9001
+
+spring:
+  application:
+    name: service-user
+  datasource:
+    url: jdbc:mysql://****:****/****?useUnicode=true&useSSL=false&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: ****
+    password: ****
+    type: com.alibaba.druid.pool.DruidDataSource
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+  redis:
+    database: 0
+    host: *.*.*.*
+    port: 6379
+    timeout: 2000
+    jedis:
+      pool:
+        max-active: 20
+        min-idle: 1
+        max-idle: 8
+        max-wait: 1000
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  server:
+    # 开启eureka自我保护机制
+    enable-self-preservation: true
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/*.xml
+
+# remark:应用定位id，每个独立部署的应用都不同，用于生产全局唯一id;范围均为[0,31];各模块 workerId 如下 author:lianghb date:2019-05-24
+# user（用户模块）：1
+# content（内容信息模块）：2
+# order（订单支付模块）：3
+# appointment（预约服务模块）：4
+# integral（积分服务模块）：5
+# manager（后端管理模块）：6
+app:
+  workerId: 1
+  dataCenterId: 1
+```
+
+## 将项目注册到 Eureka 注册中心
+配置文件填写 eureka 注册中心地址即可
+```
+eureka:
+  instance:
+    prefer-ip-address: true
+  server:
+    # 开启eureka自我保护机制
+    enable-self-preservation: true
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+```
+
+## 通过 gateway 网关访问
+本项目 api 网关采用 Zuul 框架；默认端口为 `8099`   
+gateway 配置
+- api-content：路由名称，可随意起，一般以 api- 加模块名称
+- path：请求路径解析
+- serviceId：目标微服务 id
+- strip-prefix：是否保留所有 url，即不对 url 进行处理
+
+```
+zuul:
+  routes:
+    api-content:
+      path: /*/*/content/**
+      serviceId: service-content
+      strip-prefix: false
+    api-user:
+      path: /*/*/user/**
+      serviceId: service-user
+      strip-prefix: false
+```
+配置完成后，所有请求都走 api 网关访问，不直接访问微服务端口
+
+## 项目启动
+1. 启动`eureka`注册中心
+2. 启动`gateway`应用网关
+3. 分别启动各微服务模块，顺序不分先后
+4. 通过应用网关访问各微服务模块
+
+## 获取当前请求用户
+本项目通过过滤器拦截，将 jwt 解析为用户信息，保存在 UserContext 中；如果业务需要用到当前用户，请调用 UserContext 中的方法获取。
+
+UserContext：
+- `com.gpdi.hqplus.common.entity.UserContext`
+    - `get()`：获取当前用户信息
+    - 获取到的对象为`com.gpdi.hqplus.common.entity.UserInfo`
+
+eg.
+```
+    UserInfo userInfo = UserContext.get();
+    Long userId = userInfo.getId();
+```
+
+## 暴露 api 服务接口
+暴露 api 服务接口，与普通 controller 层暴露接口写法一致，为了区分，将其置于 api 包下，无需权限验证
+编写api 接口需要注意以下几点：
+- api 接口是给其他微服务模块调用的，前端并不能直接调用（gateway 通过 url 匹配屏蔽了 api 接口），所以原则上无需做权限验证
+- 服务间通信不会携带 jwt，所以通过 api 接口访问的请求，`UserContext` 可能不存在当前请求用户的信息，这点开发业务的过程中需要特别注意；如需传递当前用户信息，可在参数中携带
+
+eg.
+```
+/**
+ * api 接口
+ *
+ * @author: lianghb
+ * @create: 2019-06-18 14:15
+ **/
+@Api
+@RestController
+@RequestMapping("/api/user")
+public class UserApi {
+
+    @Autowired
+    private IUserService userService;
+
+    /**
+     * 获取用户信息
+     *
+     * @param id
+     * @return
+     */
+    @ApiOperation(value = "获取用户信息", notes = "获取用户信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "用户 id", required = true, dataType = "String", paramType = "path"),
+    })
+    @GetMapping()
+    public User login(String id) {
+        return userService.getById(id);
+    }
+}
+```
+
+## 使用 Feign 调用微服务接口
+- 定义 Feign 接口
+    - `@FeignClient`中`value`为目标微服务 id，在 yml 中配置
+    - `@FeignClient`中`fallback`为熔断处理实现类，该类实现了当前接口，如果调用目标微服务失败（超时，服务不存在，出错等等）,即转为调用该目标类的方法返回
+    - `@RequestMapping()`注解指示了目标的 url
+```
+/**
+ * @author: lianghb
+ * @create: 2019-05-23 10:28
+ **/
+@FeignClient(value = "service-user", fallback = UserFeignClientFallback.class)
+public interface UserFeignClient {
+
+    @RequestMapping("/user/{name}")
+    JsonResultVO getHelloInfo(@PathVariable("name") String name);
+}
+```
+
+- 定义 fallback 实现类
+```
+/**
+ * @author: lianghb
+ * @create: 2019-05-23 10:31
+ **/
+public class UserFeignClientFallback implements UserFeignClient {
+    @Override
+    public JsonResultVO getHelloInfo(String name) {
+        return  JsonResultVO.fail();
+    }
+}
+```
+- 使用`@Autowired`注入即可使用
+
+## 通用层 manager 使用说明
+本项目结构，在 service 层的基础上，把通用代码和功能进一步封装并下沉得到 manager 层，开发者可使用 manager 层提供的功能访问第三方服务、中间件等，如 redis，file service，sms 等等。   
+开发者使用到相关功能时候，请尽量使用 manager 层进行操作，manager 会记录错误日志等，方便项目管理以及问题定位   
+（目前 manager 层功能还不完善，需要在后续开发中继续完善增加）
+
+- AuthenticationManager：权限验证类
+- FileService：文件处理类，如上传下载压缩等等
+- RedisService：redis 工具类
+- SMSService：消息服务类
+- WeChatService：微信相关接口服务类
+
+## 权限类使用说明
+本项目暂时没有采用其他权限框架，以权限类来进行权限管理。   
+权限类：   
+- `com.gpdi.hqplus.common.manager.AuthenticationManager`  
+
+方法说明：
+- `requireAuthentication()`：需要登录
+- `requireRole(String... roles)`：需要角色，默认需要登录，多个角色之间为 或 关系，即用户只要拥有其中一个角色即可
+- `requirePermission(String... roles)`：需要权限，默认需要登录，多个权限之间为 或 关系，即用户只要拥有其中一个权限即可   
+
+使用说明：
+- 在`controller`层调用，根据当前业务需要调用不用的权限验证方法
+```
+    /**
+     * 获取首页信息
+     *
+     * @return
+     */
+    @ApiOperation(value = "indexInfo", notes = "获取首页信息")
+    @GetMapping("/indexInfo")
+    public IndexInfoVO getIndexInfo() {
+        AuthenticationManager.requireAuthentication();
+
+        IndexInfoVO vo = new IndexInfoVO();
+        vo.setBanner(bannerService.listAll());
+        vo.setMenu(sysMenuService.listMenuByRole(UserContext.get().getRoleSet()));
+        return vo;
+    }
+```
+
+## 验证类使用说明
+使用验证类，可以将重复，繁杂的数据校验代码从业务代码中剥离出来进行重用，也可以使业务逻辑代码更加简洁易读。  
+
+公共验证类位于`com.gpdi.hqplus.common.validate`包下，应用验证类也放在应用内的`validate`包下，开发者可实现自己的验证逻辑。   
+
+验证类与工具类的区别在于，工具类只进行基本的参数校验，不涉及业务校验，而验证类可以涉及业务校验；工具类验证只返回结果，而验证类直接抛异常结束业务。   
+
+为什么使用验证类而不使用spring validation？因为spring validation只能在 controller 层使用，而验证类可以在任意地方使用，包括 service 层，达到代码重用的目的
+
+使用方法：
+
+`com.gpdi.hqplus.common.validate.ObjectValidate.requireNotNull`
+```
+    /**
+     * 对象不为空
+     *
+     * @param val
+     * @param msg
+     */
+    public static void requireNotNull(Object val, ErrorCode errorCode, String msg) {
+        if (val != null) {
+            return;
+        }
+
+        throw new ApplicationException(errorCode, msg);
+    }
+```
+service 层调用：
+```
+    @Override
+    public LoginInfoVO login(LoginQuery query) {
+        User user = baseMapper.selectOne(new QueryWrapper<User>()
+                .lambda()
+                .eq(User::getAccount, query.getAccount())
+        );
+        ObjectValidate.requireNotNull(user, ErrorCode.LOGIN_ERROR, "用户名错误");
+        
+        ...
+    }
+```
+
+## 工具类使用说明
+本项目已经封装了许多常用的工具类，可以帮助节省开发时间，开发前可先浏览下各工具类内的方法
+
+- ArrayUtil：数组工具类
+- Base64Util：Base64 工具类
+- BCryptUtil：密码加密，验证
+- BeanPowerHelper：实体类克隆工具，可将 model 自动转换为 vo
+- CollectionUtil：集合工具类
+- DateUtil：日期格式类
+- ExceptionUtil：异常工具类
+- IdGenerator：id 生成器
+- JsonUtil：json 转换工具类
+- MD5Util：MD5 工具类
+- StringUtil：字符串工具类
+
+## 全局 id 获取
+本 id 生成器使用Snowflake生成 id。本项目所有数据 id 请使用`getNumberId()`生成，其他需要uuid 串的，如文件重命名等，可使用 `getUuid()`获取。   
+
+id 生成器：
+- `com.gpdi.hqplus.common.util.IdGenerator`
+
+方法说明：
+- `getUuid()`：获取一个新的uuid
+- `getNumberId()`：获取一个新的数字id（递增）
+
+使用说明：
+- 使用`@Autowired`注入 id 生成器，后直接调用方法
+```
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
+
+    @Autowired
+    private IdGenerator idGenerator;
+
+}
+```
+
+## 全局异常处理
+本项目所有业务方法异常信息，均以抛出自定义异常结束，禁止返回正常值，返回正常值均视为业务正常，如登录接口，无论是账号不存在，还是密码错误，均视为业务异常，一定抛出异常，而不是返回 null。   
+抛出自定义异常时，只能使用错误代码枚举中的值，如不够可添加，禁止手写魔法值抛出。   
+本项目已添加全局异常处理，所以可在 controller 层向上抛出自定义异常。
+
+自定义异常：
+- `com.gpdi.hqplus.common.exception.ApplicationException`
+
+错误代码：
+- `com.gpdi.hqplus.common.constants.ErrorCode`
+
+全局异常处理类：
+- `com.gpdi.hqplus.common.advice.GlobalExceptionHandler`
+
+自定义异常构造方法说明:
+- `public ApplicationException(ErrorCode errorCode)`：使用 errorCode 中的默认信息返回
+- `public ApplicationException(ErrorCode errorCode, String msg)`：自定义返回信息
+ 
+使用说明：
+- 直接抛出即可，抛出异常时候需要根据情况，记录响应错误日志
+```
+if (user == null) {
+    // 账号不存在
+    throw new ApplicationException(ErrorCode.LOGIN_ERROR);
+}
+```
+
+## 全局统一信息返回处理
+本项目全局返回信息需要统一，示例如下：
+```
+{
+    "code":"0",
+    "msg":"ok",
+    "data":"null",
+    "timestamp":"2019-06-17 16:55"
+}
+```
+
+全局统一返回对象：
+- `com.gpdi.hqplus.common.entity.vo.JsonResultVO`
+
+全局统一信息返回包装对象：
+- `com.gpdi.hqplus.common.advice.GlobalResponseHandler`
+
+忽略统一信息返回包装注解：
+- `com.gpdi.hqplus.common.anntation.IgnoreResponseAdvice`
+
+使用说明：
+- 本项目已经采用全局信息返回包装，`controller` 层直接返回需要的数据即可
+- 如果需要忽略全局信息返回，请在方法或者类上打注解`@IgnoreResponseAdvice`
+
+## 使用 EntityGererator 生成代码
+EntityGererator使用 mybatis-plus 的代码生成器，可生成所需文件，但是模板没有更新，生成后需要根据需要进行修改   
+
+代码生成工具类，位于`util-generator`项目下
+- `com.gpdi.hqplus.EntityGenerator`
+
+使用方式：
+- 填写以下信息
+```
+        // 这里写你自己的java目录
+        String outputDirPath = "/Users/lianghb/work/hq-plus/hqplus-master/service-content/src/main/java";
+        // 基础包名
+        String basePackageName = "com.gpdi.hqplus.content";
+        // 作者
+        String author = "lianghb";
+
+        // 数据库
+        String dataBaseUrl = "jdbc:mysql://127.0.0.1:3306/hqplus?useSSL=false&characterEncoding=utf-8";
+        String driverName = "com.mysql.jdbc.Driver";
+        String userName = "root";
+        String password = "root";
+
+        // 表前缀
+        String tablePrefix = "tb_";
+
+        // 需要生成的表名
+        String[] tables = new String[]{
+                "tb_article"
+        };
+```
+- 运行代码进行自动生成
+- `Application`类添加`@MapperScan`注解
+- `controller`添加 swagger 相关注解
+- `service`与`mapper`可直接使用
+- 将 java 包下的 `mapper.xml` 文件移动到 resources 目录下
+- 修改 entity 类
+    - 添加业务所需的 status 字段
+    - 在创建时间字段添加`@TableField(fill = FieldFill.INSERT)`注解用于自动填充
+    - 在更新时间字段添加`@TableField(fill = FieldFill.INSERT_UPDATE)`注解用于自动填充
+    - 在园区代号字段添加`@TableField(fill = FieldFill.INSERT)`注解用于自动填充
+
+
+## mybatis-plus 使用说明
+参考：https://mp.baomidou.com/guide/
+
+## 数字字典
+
+## 开发示例
+以登录为例
+- 首先调用 generator 生成代码并进行相应修改
+- 编写 controller 层
+```
+@Api
+@Slf4j
+@RestController
+@RequestMapping("/v1/app/user")
+public class UserAppController {
+    @Autowired
+    private IUserService userService;
+
+    /**
+     * 登录
+     *
+     * @param query
+     * @return
+     */
+    @ApiOperation(value = "登录", notes = "登录")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "account", value = "账号", required = true, dataType = "String", paramType = "path"),
+            @ApiImplicitParam(name = "password", value = "密码", required = true, dataType = "String", paramType = "path")
+    })
+    @PostMapping("/login")
+    public LoginInfoVO login(@RequestBody LoginQuery query){
+        StringValidate.requireNotBlank(query.getAccount(),"账号不能为空");
+        StringValidate.requireNotBlank(query.getPassword(),"密码不能为空");
+        
+        return userService.login(query);
+    }
+
+}
+```
+- 编写 service 层
+```
+public interface IUserService extends IService<User> {
+    LoginInfoVO login(LoginQuery query);
+}
+
+```
+
+- 编写 service.impl 实现类
+```
+@Slf4j
+@Service
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
+
+    @Autowired
+    private RedisService redisService;
+    @Autowired
+    private IdGenerator idGenerator;
+    @Autowired
+    private ISysRoleService roleService;
+    @Autowired
+    private ISysPermissionService permissionService;
+    @Autowired
+    private WeChatService weChatService;
+
+    private final String REGISTER_LOCK_KEY_PRE = "register::";
+
+    @Override
+    public LoginInfoVO login(LoginQuery query) {
+        User user = baseMapper.selectOne(new QueryWrapper<User>()
+                .lambda()
+                .eq(User::getAccount, query.getAccount())
+        );
+        // 用户不存在
+        ObjectValidate.requireNotNull(user, ErrorCode.LOGIN_ERROR);
+        ObjectValidate.notEquals(User.STATUS_NORMAL, user.getStatus(), ErrorCode.LOGIN_ERROR, "账号异常，禁止登录");
+        boolean passwordCheck = BCryptUtil.check(query.getPassword(), user.getPassword());
+        if (!passwordCheck) {
+            // 密码错误
+            throw new ApplicationException(ErrorCode.LOGIN_ERROR);
+        }
+
+        String redisKey = RedisConstants.USER_INFO + idGenerator.getUuid();
+        String token = JwtTokenUtil.generateToken(redisKey);
+        // 组装登录信息
+        UserInfo userInfo = BeanPowerHelper.mapCompleteOverrider(user, UserInfo.class);
+        userInfo.setToken(token);
+        userInfo.setRoleSet(roleService.getRoleByUser(user.getId()));
+        userInfo.setPermissionSet(permissionService.getPermissionByRole(userInfo.getRoleSet()));
+        // 保存信息到 redis,7天有效期
+        redisService.set(redisKey, userInfo, 604800);
+        // 返回信息给前端
+        LoginInfoVO vo = BeanPowerHelper.mapCompleteOverrider(user, LoginInfoVO.class);
+        vo.setToken(token);
+        return vo;
+    }
+}
+```

@@ -1,0 +1,12 @@
+
+@squid:S1168"+Return an empty collection instead of null.(¥Ήο
+hsquid:S00112"FDefine and throw a dedicated exception instead of using a generic one.(ƒξΏΡϋÿÿÿÿ8‘κοΐ-
+`squid:CommentedOutCodeLine"<This block of commented-out lines of code should be removed.(΅ÿ
+esquid:CommentedOutCodeLine"<This block of commented-out lines of code should be removed.(‘Ο•γϊÿÿÿÿ
+Zsquid:UnusedPrivateMethodΫ"-Remove this unused private "maintain" method.(η“£‘8‘κοΐ-
+vsquid:S1192"UDefine a constant instead of duplicating this literal "update Property fail" 3 times.(¬»ώÿÿÿÿ8‘κοΐ-
+csquid:S00112"FDefine and throw a dedicated exception instead of using a generic one.(Ί΄χ8‘κοΐ-
+hsquid:S00112"FDefine and throw a dedicated exception instead of using a generic one.(Α™®¤ϋÿÿÿÿ8‘κοΐ-
+=squid:S1148"#Use a logger to log this exception.(€ΙΤ…ύÿÿÿÿ
+Csquid:S1168Ι"+Return an empty collection instead of null.(¥Ήο
+hsquid:S00112"FDefine and throw a dedicated exception instead of using a generic one.(ƒξΏΡϋÿÿÿÿ8‘κοΐ-

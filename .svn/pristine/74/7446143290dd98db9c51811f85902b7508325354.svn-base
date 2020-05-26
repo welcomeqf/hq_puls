@@ -1,0 +1,66 @@
+package com.gpdi.hqplus.apartment.entity.vo;
+
+import com.alibaba.fastjson.annotation.JSONField;
+import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.gpdi.hqplus.resources.entity.Book;
+import lombok.Data;
+
+import java.time.LocalDateTime;
+
+/**
+ * @Description 公寓预约vo类
+ * 公寓预约存于tb_book，其中的resourceId为ApartmentVO的id
+ * @Author wzr
+ * @CreateDate 2019-07-04
+ * @Time 09:55
+ */
+@Data
+public class ApartmentBookVO extends Model<Book> {
+
+    /**
+     * 公寓预约id
+     */
+    private Long id;
+
+    /**
+     * 公寓id
+     */
+    private Long apartmentId;
+
+    /**
+     * 预约看房时间
+     */
+    @JSONField(format="yyyy-MM-dd")
+    private LocalDateTime applyTime;
+
+    /**
+     * 备注
+     */
+    private String message;
+
+    /**
+     * 意向房型id(并不是筛选要素，仅记录)
+     */
+    private Long roomId;
+
+    /**
+     * 看房人姓名
+     */
+    private String name;
+
+    /**
+     * 看房人手机号码
+     */
+    private String phone;
+
+    /**
+     * 联系人性别
+     */
+    private String gender;
+
+    /**
+     * 状态
+     */
+    private String status;
+
+}

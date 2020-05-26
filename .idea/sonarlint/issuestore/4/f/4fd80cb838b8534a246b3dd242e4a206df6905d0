@@ -1,0 +1,81 @@
+
+Psquid:S1197"8Move the array designator from the variable to the type.(ë»Âµ
+:squid:S1659Ö""Declare "olen" on a separate line.(†Î¡Ã
+Usquid:S1197¢"8Move the array designator from the variable to the type.(Ó¡«õüÿÿÿÿ
+jsquid:S00117«"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ê ß
+¤%squid:RedundantThrowsDeclarationCheckœ"mRemove the declaration of thrown exception 'java.lang.IllegalArgumentException' which is a runtime exception.(ó’Úıÿÿÿÿ
+;squid:S1659İ"#Declare "doffp" on a separate line.(›Ï¡«
+;squid:S1659­"#Declare "saltb" on a separate line.(½Ë¦Œ
+Osquid:S1197g"8Move the array designator from the variable to the type.(Şú¾—
+Psquid:S1197"8Move the array designator from the variable to the type.(‚Ï¿„
+fsquid:S00100€"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(“¨í(
+esquid:S00116"LRename this field "P" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(º²ıâ
+osquid:S00117 "QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(æ ±ºıÿÿÿÿ
+wsquid:S1149ë"_Replace the synchronized class "StringBuffer" by an unsynchronized one such as "StringBuilder".(‡•î
+wsquid:S1149"_Replace the synchronized class "StringBuffer" by an unsynchronized one such as "StringBuilder".(‡•î
+?squid:S1659Á""Declare "slen" on a separate line.(‹ŒÎşÿÿÿÿ
+Usquid:S1197„"8Move the array designator from the variable to the type.(øàü÷şÿÿÿÿ
+Osquid:S1197€"8Move the array designator from the variable to the type.(“¨í(
+wsquid:S1149ë"_Replace the synchronized class "StringBuffer" by an unsynchronized one such as "StringBuilder".(‡•î
+<squid:S1659­"$Declare "hashed" on a separate line.(½Ë¦Œ
+Psquid:S1197Û"8Move the array designator from the variable to the type.(“•á€
+wsquid:S1149°"_Replace the synchronized class "StringBuffer" by an unsynchronized one such as "StringBuilder".(‡•î
+:squid:S1659Ö""Declare "slen" on a separate line.(†Î¡Ã
+Osquid:S1197`"8Move the array designator from the variable to the type.(¯ÚİÎ
+Psquid:S1197İ"8Move the array designator from the variable to the type.(›Ï¡«
+u
+squid:S135İ"YReduce the total number of break and continue statements in this loop to use at most one.(ú²õ«üÿÿÿÿ
+=squid:S1659Ø" Declare "c3" on a separate line.(ÀßçÖùÿÿÿÿ
+Psquid:S1197ó"8Move the array designator from the variable to the type.(Åşõ·
+Usquid:S1197ı"8Move the array designator from the variable to the type.(¬ùÿĞşÿÿÿÿ
+Psquid:S1197­"8Move the array designator from the variable to the type.(½Ë¦Œ
+=squid:S1659Ø" Declare "c2" on a separate line.(ÀßçÖùÿÿÿÿ
+>squid:S1659¯"!Declare "off" on a separate line.(š¾ŒÄøÿÿÿÿ
+psquid:ModifiersOrderCheckı"EReorder the modifiers to comply with the Java Language Specification.(¬ùÿĞşÿÿÿÿ
+lsquid:S00100Ó"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¼Ô©”üÿÿÿÿ
+lsquid:S00100³"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(²êıÖÿÿÿÿÿ
+Usquid:S1197›"8Move the array designator from the variable to the type.(’¨ÿÉûÿÿÿÿ
+osquid:S00117"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(«£‡•ùÿÿÿÿ
+ksquid:ModifiersOrderCheckó"EReorder the modifiers to comply with the Java Language Specification.(Åşõ·
+7squid:S1659‚"Declare "j" on a separate line.(šÖıÿ
+¤%squid:RedundantThrowsDeclarationCheckÔ"mRemove the declaration of thrown exception 'java.lang.IllegalArgumentException' which is a runtime exception.(ó’Úıÿÿÿÿ
+Psquid:S1197­"8Move the array designator from the variable to the type.(½Ë¦Œ
+Usquid:S1197½"8Move the array designator from the variable to the type.(ÆÇŠÑùÿÿÿÿ
+Usquid:S1197ì"8Move the array designator from the variable to the type.(«¿±”ÿÿÿÿÿ
+osquid:S00117ê"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ûÜúôÿÿÿÿÿ
+wsquid:S1149"_Replace the synchronized class "StringBuffer" by an unsynchronized one such as "StringBuilder".(‡•î
+esquid:S00116"LRename this field "S" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(…â•¦
+Usquid:S1197"8Move the array designator from the variable to the type.(«£‡•ùÿÿÿÿ
+7squid:S1659‚"Declare "i" on a separate line.(šÖıÿ
+Osquid:S1197ƒ"8Move the array designator from the variable to the type.(¨Å¥i
+ksquid:ModifiersOrderCheckí"EReorder the modifiers to comply with the Java Language Specification.(¬Ì’
+Osquid:S1197€"8Move the array designator from the variable to the type.(“¨í(
+wsquid:S1149°"_Replace the synchronized class "StringBuffer" by an unsynchronized one such as "StringBuilder".(‡•î
+Usquid:S1197¿"8Move the array designator from the variable to the type.(å’Üÿÿÿÿÿ
+csquid:S1192Ä"FDefine a constant instead of duplicating this literal "UTF-8" 3 times.(‚şÿéüÿÿÿÿ
+<squid:S1659Ø"Declare "o" on a separate line.(ÀßçÖùÿÿÿÿ
+?squid:S1659ß""Declare "slen" on a separate line.(‹ŒÎşÿÿÿÿ
+=squid:S1659Ø" Declare "c4" on a separate line.(ÀßçÖùÿÿÿÿ
+Psquid:S1197"8Move the array designator from the variable to the type.(º²ıâ
+Psquid:S1197Û"8Move the array designator from the variable to the type.(“•á€
+Psquid:S1197­"8Move the array designator from the variable to the type.(½Ë¦Œ
+lsquid:S00100›"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(’¨ÿÉûÿÿÿÿ
+isquid:S00117€"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(“¨í(
+7squid:S1659„"Declare "r" on a separate line.(¹È’¡
+u
+squid:S135¤"YReduce the total number of break and continue statements in this loop to use at most one.(ÅöÖûÿÿÿÿ
+Usquid:S1197×"8Move the array designator from the variable to the type.(øàü÷şÿÿÿÿ
+=squid:S1659Ÿ" Declare "c2" on a separate line.(Şİ¸üÿÿÿÿ
+jsquid:S00117"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(‚Ï¿„
+wsquid:S1149Õ"_Replace the synchronized class "StringBuffer" by an unsynchronized one such as "StringBuilder".(‡•î
+7squid:S1659„"Declare "l" on a separate line.(¹È’¡
+Psquid:S1197Ş"8Move the array designator from the variable to the type.(«÷×
+Psquid:S1197À"8Move the array designator from the variable to the type.(«÷×
+wsquid:S1149Õ"_Replace the synchronized class "StringBuffer" by an unsynchronized one such as "StringBuilder".(‡•î
+7squid:S1659„"Declare "n" on a separate line.(¹È’¡
+Psquid:S1197í"8Move the array designator from the variable to the type.(¬Ì’
+Psquid:S1197"8Move the array designator from the variable to the type.(…â•¦
+Usquid:S1197¢"8Move the array designator from the variable to the type.(Ó¡«õüÿÿÿÿ
+osquid:S00117…"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(æ³°€øÿÿÿÿ
+Psquid:S1197İ"8Move the array designator from the variable to the type.(›Ï¡«
+osquid:S00117¬"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ş¼Š‘ùÿÿÿÿ

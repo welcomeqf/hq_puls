@@ -1,0 +1,22 @@
+package com.gpdi.hqplus.order.entity.query;
+
+import com.gpdi.hqplus.common.entity.BasePageQuery;
+import lombok.Data;
+
+
+/**
+ * @author: lianghb
+ * @create: 2019-07-08 14:14
+ **/
+@Data
+public class OrderListQuery extends BasePageQuery {
+    private String businessCode;
+    private String status;
+    private Long userId;
+    private Params params;
+
+    @Data
+    public static class Params{
+        private String orderCode;
+    }
+}
